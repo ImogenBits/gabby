@@ -3,18 +3,20 @@
 #include <ESP8266WebServer.h>
 #include <SoftwareSerial.h>
 
+#define wait_for(c) while(!c) yield();
+
 #define SERVER_PORT 80
 const byte txPin = D7;
-const byte rxPin = D5;
+const byte rxPin = D1;
 #define DELAY 1
 
 const byte to_gabby = D6;
-const byte from_gabby = D1;
+const byte from_gabby = D4;
 
 
 ESP8266WebServer server(80);
 
-SoftwareSerial typeSerial(rxPin, txPin, true);
+SoftwareSerial gabbySerial(rxPin, txPin, true);
 
 void blink(void);
 
@@ -46,7 +48,7 @@ void setup() {
     Serial.println();
     Serial.println("wah");
 
-    typeSerial.begin(4800);
+    gabbySerial.begin(4800);
 
     WiFi.begin(WIFI_NAME, WIFI_PW);
     Serial.print("Connecting");
@@ -118,6 +120,12 @@ void serialSend(void) {
 void switchOnline(void) {
     byte data[] = {0xA0, 0x00, 0xA1, 0x00, 0xA4, 0x00, 0xA2, 0x00};
     sendBytes(data, 8);
+    /*wait_for(gabbySerial.available());
+    digitalWrite(to_gabby, LOW);
+    delay(1);
+    digitalWrite(to_gabby, HIGH);
+    Serial.printf("%x\n", gabbySerial.read());
+    */
 }
 
 void switchOffline(void) {
@@ -128,12 +136,15 @@ void switchOffline(void) {
 void sendBytes(byte data[], byte count) {
 
     for (byte i = 0; i < count; i++) {
-        //digitalWrite(to_gabby, HIGH);
-        typeSerial.write(data[i]);
-        while(digitalRead(from_gabby) == HIGH);
-        while(digitalRead(from_gabby) == LOW);
-        //digitalWrite(to_gabby, LOW);
-        //delay(3);
+        gabbySerial.write(data[i]);
+        wait_for(digitalRead(from_gabby) == LOW)
+        wait_for(digitalRead(from_gabby) == HIGH)
+        delay(6);
+        if (gabbySerial.available()) {
+            digitalWrite(to_gabby, LOW);
+            delay(1);
+            digitalWrite(to_gabby, HIGH);
+        }
     }
     
     //while(digitalRead(from_gabby) == LOW);
