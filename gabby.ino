@@ -137,17 +137,16 @@ void sendBytes(byte data[], byte count) {
 
     for (byte i = 0; i < count; i+=2) {
         gabbySerial.write(data[i]);
-        wait_for(digitalRead(from_gabby) == LOW)
-        wait_for(digitalRead(from_gabby) == HIGH)
+        wait_for(digitalRead(from_gabby) == LOW);
+        wait_for(digitalRead(from_gabby) == HIGH);
         gabbySerial.write(data[i+1]);
-        wait_for(digitalRead(from_gabby) == LOW)
-        wait_for(digitalRead(from_gabby) == HIGH)
-        wait_for(gabbySerial.available()) {
-            digitalWrite(to_gabby, LOW);
-            gabbySerial.read();
-            delay(1);
-            digitalWrite(to_gabby, HIGH);
-        }
+        wait_for(digitalRead(from_gabby) == LOW);
+        wait_for(digitalRead(from_gabby) == HIGH);
+        wait_for(gabbySerial.available());
+        digitalWrite(to_gabby, LOW);
+        gabbySerial.read();
+        delay(1);
+        digitalWrite(to_gabby, HIGH);
     }
     
     //while(digitalRead(from_gabby) == LOW);
