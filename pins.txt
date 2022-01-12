@@ -1,0 +1,6 @@
+
+Gabby           software        arduino
+blau    RxD     green 3         D7
+grün    DSR     orange 2        D6
+black   DTR     red 1           D4
+red     TxD     brown 0

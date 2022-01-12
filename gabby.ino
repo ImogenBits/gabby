@@ -8,6 +8,9 @@ const byte txPin = D7;
 const byte rxPin = D5;
 #define DELAY 1
 
+const byte to_gabby = D6;
+const byte from_gabby = D1;
+
 
 ESP8266WebServer server(80);
 
@@ -24,20 +27,30 @@ void switchOffline(void);
 void sendCommand(const String &cmd);
 
 void setup() {
-    pinMode(rxPin, INPUT);
-    pinMode(txPin, OUTPUT);
+    // LED
     pinMode(D3, OUTPUT);
     digitalWrite(D3, LOW);
-    pinMode(D6, OUTPUT);
-    digitalWrite(D6, LOW);
+
+    // UART
+    pinMode(rxPin, INPUT);
+    pinMode(txPin, OUTPUT);
+
+    // handshake
+    pinMode(to_gabby, OUTPUT);
+    digitalWrite(to_gabby, HIGH);
+    pinMode(from_gabby, INPUT);
+
+    blink();
 
     Serial.begin(115200);
     Serial.println();
+    Serial.println("wah");
 
     typeSerial.begin(4800);
 
     WiFi.begin(WIFI_NAME, WIFI_PW);
     Serial.print("Connecting");
+    blink();
     while (WiFi.status() != WL_CONNECTED)
     {
     delay(500);
@@ -46,6 +59,7 @@ void setup() {
     Serial.println();
     Serial.print("Connected, IP address: ");
     Serial.println(WiFi.localIP());
+    blink();
 
     server.on("/", handleRoot);
     server.on("/SerialSend", serialSend);
@@ -63,6 +77,12 @@ void blink(void) {
     delay(500);
     digitalWrite(D3, LOW);
     delay(500);
+}
+void bilnk_short(void) {
+    digitalWrite(D3, HIGH);
+    delay(100);
+    digitalWrite(D3, LOW);
+    delay(100);
 }
 
 void handleRoot(void) {
@@ -96,59 +116,30 @@ void serialSend(void) {
 }
 
 void switchOnline(void) {
-    digitalWrite(D6, LOW);
-    delay(DELAY);
-    typeSerial.write(0xA0);
-    delay(DELAY);
-    typeSerial.write(0x00);
-    delay(DELAY);
-    typeSerial.write(0xA1);
-    delay(DELAY);
-    typeSerial.write(0x00);
-    delay(DELAY);
-    typeSerial.write(0xA4);
-    delay(DELAY);
-    typeSerial.write(0x00);
-    delay(DELAY);
-    typeSerial.write(0xA2);
-    delay(DELAY);
-    typeSerial.write(0x00);
-    delay(DELAY);
-    digitalWrite(D6, HIGH);
+    byte data[] = {0xA0, 0x00, 0xA1, 0x00, 0xA4, 0x00, 0xA2, 0x00};
+    sendBytes(data, 8);
 }
 
 void switchOffline(void) {
-    delay(DELAY);
-    typeSerial.write(0xA3);
-    delay(DELAY);
-    typeSerial.write(0x00);
-    delay(DELAY);
-    typeSerial.write(0xA0);
-    delay(DELAY);
-    typeSerial.write(0x00);
-    delay(DELAY);
+    byte data[] = {0xA3, 0x00, 0xA0, 0x00};
+    sendBytes(data, 4);
 }
 
-void sendBytes(byte fst, byte snd) {
-    digitalWrite(D6, LOW);
-    delay(5);
-    delay(DELAY);
-    delay(DELAY);
-    typeSerial.write(fst);
-    delay(DELAY);
-    typeSerial.write(snd);
-    delay(DELAY);
-    delay(DELAY);
-    delay(DELAY);
-    delay(DELAY);
-    delay(DELAY);
-    delay(DELAY);
-    delay(DELAY);
-    delay(DELAY);
-    delay(DELAY);
-    delay(DELAY);
-    delay(DELAY);
-    digitalWrite(D6, HIGH);
+void sendBytes(byte data[], byte count) {
+
+    for (byte i = 0; i < count; i++) {
+        //digitalWrite(to_gabby, HIGH);
+        typeSerial.write(data[i]);
+        while(digitalRead(from_gabby) == HIGH);
+        while(digitalRead(from_gabby) == LOW);
+        //digitalWrite(to_gabby, LOW);
+        //delay(3);
+    }
+    
+    //while(digitalRead(from_gabby) == LOW);
+    delay(1);
+    //delay(3);
+    
 }
 
 void sendCommand(const String &cmd) {
@@ -156,5 +147,6 @@ void sendCommand(const String &cmd) {
     cmd.toCharArray(c, 5);
     int a = strtol(c, NULL, 16);
     Serial.printf("%d\n", a);
-    sendBytes(a >> 8, (byte) a);
+    byte data[] = {a >> 8, (byte) a};
+    sendBytes(data, 2);
 }
