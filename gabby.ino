@@ -118,11 +118,8 @@ void handleNotFound(void) {
 }
 
 void serialSend(void) {
-    if (! server.hasArg("data") || server.arg("data") == NULL) {
-        server.send(400, "text/plain", "invalid re");
-        return;
-    }
     if (!server.hasArg("control") || !server.hasArg("data")) {
+        server.send(400, "text/plain", "invalid request");
         return;
     }
     String control = server.arg("control");
@@ -131,7 +128,12 @@ void serialSend(void) {
     if (control.indexOf("on") >= 0)
         switch_online();
 
-    if (!data.isEmpty()) {
+    if (control.indexOf("magic") >= 0) {
+        byte cmd[] = {0x08, 0xAD, 0xE0, 0x09, 0xD0, 0x08, 0x08, 0xAD};
+    	send_bytes(cmd, 8);
+    }
+
+    if (data != NULL && !data.isEmpty()) {
         byte buf[256];
         data.getBytes(buf, 256);
         int len = data.length() > 256 ? 256 : data.length();
@@ -143,11 +145,14 @@ void serialSend(void) {
             a |= (buf[i+1] >= 'A') ? (buf[i+1] - 'A' + 10) : (buf[i+1] - '0');
             commands[i/2] = a;
         }
-        if (len/2 > 0)
+        if (len/2 > 0) {
+            Serial.print("bleh: ");
+            Serial.println(bytes_to_hex(commands, len/2));
             send_bytes(commands, len/2);
+        }
     }
 
-    if (data == "off")
+    if (control.indexOf("off") >= 0)
         switch_offline();
 
     blink();
@@ -179,7 +184,7 @@ String send_command(byte first, byte second) {
     gabbySerial.write(second);
     wait_for(digitalRead(from_gabby) == LOW);
     wait_for(digitalRead(from_gabby) == HIGH);
-    if (first & 0x80) {
+    if ((first & 0xF0) == 0xA0) {
         wait_for(gabbySerial.available());
         byte buf[128];
         int i = 1;

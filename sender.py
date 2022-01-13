@@ -2,9 +2,12 @@ from re import escape
 from time import sleep
 import httpx
 
-def send(d):
+def send(d, c=""):
+    a = d.upper().replace(" ", "")
+    print(a)
     try:
-        print(httpx.post("http://192.168.178.25:80/SerialSend", data=d))
+        httpx.post("http://192.168.178.25:80/SerialSend",
+            data={"control": c, "data": a})
     except Exception as e:
         print(e)
 
@@ -36,5 +39,19 @@ def commands(text):
         out += f"{letters_map[c]:02x}ad"
     return out
 
-cmd = commands("waah!")
-send({"control": "on, off", "data": cmd})
+for k in range(10):
+    cmd = ""
+    for i in range(k, k+10):
+        cmd += f"{i:02x}ad"
+    
+
+#send("", "onoffmagic")
+
+send("08AD E00C D008 08AD", "onoff")
+
+#send("", "on")
+#send("08AD")
+#send("E009")
+#send("D008")
+#send("08AD")
+#send("", "off")
