@@ -3,7 +3,7 @@
 #include <ESP8266WebServer.h>
 #include <SoftwareSerial.h>
 
-#define wait_for(c) while(!c) yield();
+#define wait_for(c) while(!(c)) yield();
 
 #define SERVER_PORT 80
 const byte txPin = D7;
@@ -120,12 +120,6 @@ void serialSend(void) {
 void switchOnline(void) {
     byte data[] = {0xA0, 0x00, 0xA1, 0x00, 0xA4, 0x00, 0xA2, 0x00};
     sendBytes(data, 8);
-    /*wait_for(gabbySerial.available());
-    digitalWrite(to_gabby, LOW);
-    delay(1);
-    digitalWrite(to_gabby, HIGH);
-    Serial.printf("%x\n", gabbySerial.read());
-    */
 }
 
 void switchOffline(void) {
@@ -134,25 +128,28 @@ void switchOffline(void) {
 }
 
 void sendBytes(byte data[], byte count) {
-
     for (byte i = 0; i < count; i+=2) {
-        gabbySerial.write(data[i]);
-        wait_for(digitalRead(from_gabby) == LOW);
-        wait_for(digitalRead(from_gabby) == HIGH);
-        gabbySerial.write(data[i+1]);
-        wait_for(digitalRead(from_gabby) == LOW);
-        wait_for(digitalRead(from_gabby) == HIGH);
-        wait_for(gabbySerial.available());
-        digitalWrite(to_gabby, LOW);
-        gabbySerial.read();
-        delay(1);
-        digitalWrite(to_gabby, HIGH);
+        send_command(data[i], data[i+1]);
     }
-    
-    //while(digitalRead(from_gabby) == LOW);
+}
+
+String send_command(byte first, byte second) {
+    gabbySerial.write(first);
+    wait_for(digitalRead(from_gabby) == LOW);
+    wait_for(digitalRead(from_gabby) == HIGH);
+    gabbySerial.write(second);
+    wait_for(digitalRead(from_gabby) == LOW);
+    wait_for(digitalRead(from_gabby) == HIGH);
+    wait_for(gabbySerial.available());
+    digitalWrite(to_gabby, LOW);
+    byte response = gabbySerial.read();
     delay(1);
-    //delay(3);
-    
+    digitalWrite(to_gabby, HIGH);
+    String out = String();
+    if (response == 0xA3) {
+        out = gabbySerial.readString();
+    }
+    return out;
 }
 
 void sendCommand(const String &cmd) {
@@ -161,5 +158,4 @@ void sendCommand(const String &cmd) {
     int a = strtol(c, NULL, 16);
     Serial.printf("%d\n", a);
     byte data[] = {a >> 8, (byte) a};
-    sendBytes(data, 2);
 }
