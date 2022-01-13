@@ -33,21 +33,30 @@ letters = [
     "u", "d", "o", "z",
 ]
 letters_map = {c: (i+1) for (i, c) in enumerate(letters)}
+
 def commands(text):
     out = ""
     for c in text:
         out += f"{letters_map[c]:02x}ad"
     return out
 
+def typeln(text):
+    cmd = commands(text)
+    cmd += f"e0{12*len(text):02x} d013"
+    send(cmd, "onoff")
+
+send("", "on")
 for k in range(10):
     cmd = ""
-    for i in range(k, k+10):
+    for i in range(10*k+1, 10*k + 11):
         cmd += f"{i:02x}ad"
-    
+    cmd += "e078 d013"
+    send(cmd)
+send("", "off")
 
 #send("", "onoffmagic")
 
-send("08AD E00C D008 08AD", "onoff")
+#send("08AD E00C D008 08AD", "onoff")
 
 #send("", "on")
 #send("08AD")
