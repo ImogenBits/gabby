@@ -147,7 +147,7 @@ void serialSend(void) {
             a |= (buf[i+1] >= 'A') ? (buf[i+1] - 'A' + 10) : (buf[i+1] - '0');
             commands[i/2] = a;
         }
-        send_bytes(commands, len);
+        send_bytes(commands, len/2);
     }
 
     blink();
