@@ -161,22 +161,25 @@ String send_command(byte first, byte second) {
     gabbySerial.write(second);
     wait_for(digitalRead(from_gabby) == LOW);
     wait_for(digitalRead(from_gabby) == HIGH);
-    wait_for(gabbySerial.available());
-    byte buf[128];
-    int i = 1;
-    buf[0] = gabbySerial.read();
-    if (buf[0] == 0xA4) {
-        delayMicroseconds(2300);
-        while (gabbySerial.available()) {
-            buf[i] = gabbySerial.read();
-            i++;
+    if (first & 0x80) {
+        wait_for(gabbySerial.available());
+        byte buf[128];
+        int i = 1;
+        buf[0] = gabbySerial.read();
+        if (buf[0] == 0xA4) {
             delayMicroseconds(2300);
+            while (gabbySerial.available()) {
+                buf[i] = gabbySerial.read();
+                i++;
+                delayMicroseconds(2300);
+            }
         }
-    }
-    digitalWrite(to_gabby, LOW);
-    delay(1);
-    digitalWrite(to_gabby, HIGH);
-    return bytes_to_hex(buf, i);
+        digitalWrite(to_gabby, LOW);
+        delay(1);
+        digitalWrite(to_gabby, HIGH);
+        return bytes_to_hex(buf, i);
+    } else
+        return String();
 }
 
 void sendCommand(const String &cmd) {
