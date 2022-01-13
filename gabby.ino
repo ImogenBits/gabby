@@ -122,31 +122,49 @@ void serialSend(void) {
         server.send(400, "text/plain", "invalid re");
         return;
     }
-    Serial.println(server.arg("data"));
+    if (!server.hasArg("type") || !server.hasArg("data")) {
+        return;
+    }
+    String type = server.arg("type");
+    String data = server.arg("data");
 
-    if (server.arg("data") == "Online") {
-        switchOnline();
-    } else if (server.arg("data") == "Offline") {
-        switchOffline();
-    } else {
-        sendCommand(server.arg("data"));
+    if (type == "control") {
+        if (data == "online")
+            switch_online();
+        if (data == "offline")
+            switch_offline();
+    }
+
+    if (type == "commands") {
+        byte buf[256];
+        data.getBytes(buf, 256);
+        int len = data.length() > 256 ? 256 : data.length();
+        len = (len / 4) * 4;
+        byte commands[128];
+        for (int i = 0; i < len; i += 2) {
+            int a = (buf[i] >= 'A') ? (buf[i] - 'A' + 10) : (buf[i] - '0');
+            a <<= 4;
+            a |= (buf[i+1] >= 'A') ? (buf[i+1] - 'A' + 10) : (buf[i+1] - '0');
+            commands[i/2] = a;
+        }
+        send_bytes(commands, len);
     }
 
     blink();
     server.send(200, "text/plain", "Sent data");
 }
 
-void switchOnline(void) {
+void switch_online(void) {
     byte data[] = {0xA0, 0x00, 0xA1, 0x00, 0xA4, 0x00, 0xA2, 0x00};
-    sendBytes(data, 8);
+    send_bytes(data, 8);
 }
 
-void switchOffline(void) {
+void switch_offline(void) {
     byte data[] = {0xA3, 0x00, 0xA0, 0x00};
-    sendBytes(data, 4);
+    send_bytes(data, 4);
 }
 
-void sendBytes(byte data[], byte count) {
+void send_bytes(byte data[], byte count) {
     for (byte i = 0; i < count; i+=2) {
         String msg = send_command(data[i], data[i+1]);
         Serial.print("response: ");
@@ -180,14 +198,4 @@ String send_command(byte first, byte second) {
         return bytes_to_hex(buf, i);
     } else
         return String();
-}
-
-void sendCommand(const String &cmd) {
-    char c[5];
-    cmd.toCharArray(c, 5);
-    int a = strtol(c, NULL, 16);
-
-    String msg = send_command(a >> 8, (byte) a);
-        Serial.print("response: ");
-        Serial.println(msg);
 }

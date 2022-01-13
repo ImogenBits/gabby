@@ -25,11 +25,7 @@ letter_map = [
 
 try:
     print(httpx.post("http://192.168.178.25:80/SerialSend", data={"data": "Online"}))
-    print(httpx.post("http://192.168.178.25:80/SerialSend", data={"data": "44ad"}))
-    print(httpx.post("http://192.168.178.25:80/SerialSend", data={"data": "45ad"}))
-    print(httpx.post("http://192.168.178.25:80/SerialSend", data={"data": "46ad"}))
-    print(httpx.post("http://192.168.178.25:80/SerialSend", data={"data": "47ad"}))
-    print(httpx.post("http://192.168.178.25:80/SerialSend", data={"data": "48ad"}))
+    print(httpx.post("http://192.168.178.25:80/SerialSend", data={"data": "50ad"}))
     print(httpx.post("http://192.168.178.25:80/SerialSend", data={"data": "Offline"}))
 except Exception as e:
     print(e)
