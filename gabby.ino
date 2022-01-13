@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <SoftwareSerial.h>
+#include <string>
 
 #define wait_for(c) while(!(c)) yield();
 
@@ -80,11 +81,22 @@ void blink(void) {
     digitalWrite(D3, LOW);
     delay(500);
 }
+
 void bilnk_short(void) {
     digitalWrite(D3, HIGH);
     delay(100);
     digitalWrite(D3, LOW);
     delay(100);
+}
+
+String bytes_to_hex(byte *buf, int count) {
+    String out = String();
+    char bleh[3];
+    for (int i = 0; i < count; i++) {
+        sprintf(bleh, "%x", buf[i]);
+        out += bleh;
+    }
+    return bleh;
 }
 
 void handleRoot(void) {
@@ -129,7 +141,9 @@ void switchOffline(void) {
 
 void sendBytes(byte data[], byte count) {
     for (byte i = 0; i < count; i+=2) {
-        send_command(data[i], data[i+1]);
+        String msg = send_command(data[i], data[i+1]);
+        Serial.print("response: ");
+        Serial.println(msg);
     }
 }
 
@@ -141,14 +155,21 @@ String send_command(byte first, byte second) {
     wait_for(digitalRead(from_gabby) == LOW);
     wait_for(digitalRead(from_gabby) == HIGH);
     wait_for(gabbySerial.available());
-    digitalWrite(to_gabby, LOW);
     byte response = gabbySerial.read();
+    String out = String();
+    if (response == 0xA4) {
+        byte buf[128];
+        int i = 0;
+        delay(2);
+        while (gabbySerial.available()) {
+            buf[i++] = gabbySerial.read();
+            delay(2);
+        }
+        out = bytes_to_hex(buf, i);
+    }
+    digitalWrite(to_gabby, LOW);
     delay(1);
     digitalWrite(to_gabby, HIGH);
-    String out = String();
-    if (response == 0xA3) {
-        out = gabbySerial.readString();
-    }
     return out;
 }
 
