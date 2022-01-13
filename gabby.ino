@@ -89,14 +89,21 @@ void bilnk_short(void) {
     delay(100);
 }
 
+char nyble(byte value) {
+    if (value <= 9)
+        return '0' + value;
+    else
+        return 'A' + value - 10;
+}
+
 String bytes_to_hex(byte *buf, int count) {
     String out = String();
-    char bleh[3];
     for (int i = 0; i < count; i++) {
-        sprintf(bleh, "%x", buf[i]);
-        out += bleh;
+        out += nyble(buf[i] >> 4);
+        out += nyble(buf[i] & 0xF);
+        out += " ";
     }
-    return bleh;
+    return out;
 }
 
 void handleRoot(void) {
@@ -155,28 +162,29 @@ String send_command(byte first, byte second) {
     wait_for(digitalRead(from_gabby) == LOW);
     wait_for(digitalRead(from_gabby) == HIGH);
     wait_for(gabbySerial.available());
-    byte response = gabbySerial.read();
-    String out = String();
-    if (response == 0xA4) {
-        byte buf[128];
-        int i = 0;
-        delay(2);
+    byte buf[128];
+    int i = 1;
+    buf[0] = gabbySerial.read();
+    if (buf[0] == 0xA4) {
+        delayMicroseconds(2300);
         while (gabbySerial.available()) {
-            buf[i++] = gabbySerial.read();
-            delay(2);
+            buf[i] = gabbySerial.read();
+            i++;
+            delayMicroseconds(2300);
         }
-        out = bytes_to_hex(buf, i);
     }
     digitalWrite(to_gabby, LOW);
     delay(1);
     digitalWrite(to_gabby, HIGH);
-    return out;
+    return bytes_to_hex(buf, i);
 }
 
 void sendCommand(const String &cmd) {
     char c[5];
     cmd.toCharArray(c, 5);
     int a = strtol(c, NULL, 16);
-    Serial.printf("%d\n", a);
-    byte data[] = {a >> 8, (byte) a};
+
+    String msg = send_command(a >> 8, (byte) a);
+        Serial.print("response: ");
+        Serial.println(msg);
 }
