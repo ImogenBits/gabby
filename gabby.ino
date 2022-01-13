@@ -77,9 +77,9 @@ void loop() {
 
 void blink(void) {
     digitalWrite(D3, HIGH);
-    delay(500);
+    delay(250);
     digitalWrite(D3, LOW);
-    delay(500);
+    delay(250);
 }
 
 void bilnk_short(void) {
@@ -122,20 +122,16 @@ void serialSend(void) {
         server.send(400, "text/plain", "invalid re");
         return;
     }
-    if (!server.hasArg("type") || !server.hasArg("data")) {
+    if (!server.hasArg("control") || !server.hasArg("data")) {
         return;
     }
-    String type = server.arg("type");
+    String control = server.arg("control");
     String data = server.arg("data");
 
-    if (type == "control") {
-        if (data == "online")
-            switch_online();
-        if (data == "offline")
-            switch_offline();
-    }
+    if (control.indexOf("on") >= 0)
+        switch_online();
 
-    if (type == "commands") {
+    if (!data.isEmpty()) {
         byte buf[256];
         data.getBytes(buf, 256);
         int len = data.length() > 256 ? 256 : data.length();
@@ -147,8 +143,12 @@ void serialSend(void) {
             a |= (buf[i+1] >= 'A') ? (buf[i+1] - 'A' + 10) : (buf[i+1] - '0');
             commands[i/2] = a;
         }
-        send_bytes(commands, len/2);
+        if (len/2 > 0)
+            send_bytes(commands, len/2);
     }
+
+    if (data == "off")
+        switch_offline();
 
     blink();
     server.send(200, "text/plain", "Sent data");

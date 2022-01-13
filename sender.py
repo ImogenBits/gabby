@@ -1,7 +1,14 @@
+from re import escape
 from time import sleep
 import httpx
 
-letter_map = [
+def send(d):
+    try:
+        print(httpx.post("http://192.168.178.25:80/SerialSend", data=d))
+    except Exception as e:
+        print(e)
+
+letters = [
     ".", ",", "-", "v", "l", "m", "j", "w",
     "²", "µ", "f", "^", ">", "´", "+", "1",
 
@@ -22,23 +29,12 @@ letter_map = [
 
     "u", "d", "o", "z",
 ]
+letters_map = {c: (i+1) for (i, c) in enumerate(letters)}
+def commands(text):
+    out = ""
+    for c in text:
+        out += f"{letters_map[c]:02x}ad"
+    return out
 
-letter_set = set(letter_map)
-print(len(letter_map))
-print(len(letter_set))
-seen = set()
-dupes = []
-
-for x in letter_map:
-    if x in seen:
-        dupes.append(x)
-    else:
-        seen.add(x)
-print(dupes)
-
-try:
-    print(httpx.post("http://192.168.178.25:80/SerialSend", data={"type": "control", "data": "online"}))
-    print(httpx.post("http://192.168.178.25:80/SerialSend", data={"type": "commands", "data": "58ad63ad"}))
-    print(httpx.post("http://192.168.178.25:80/SerialSend", data={"type": "control", "data": "offline"}))
-except Exception as e:
-    print(e)
+cmd = commands("waah!")
+send({"control": "on, off", "data": cmd})
