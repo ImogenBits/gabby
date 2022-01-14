@@ -12,7 +12,9 @@ const byte rxPin = D1;
 #define DELAY 1
 
 const byte to_gabby = D6;
-const byte from_gabby = D4;
+const byte from_gabby = D2;
+
+const byte led = D3;
 
 
 ESP8266WebServer server(80);
@@ -31,8 +33,8 @@ void sendCommand(const String &cmd);
 
 void setup() {
     // LED
-    pinMode(D3, OUTPUT);
-    digitalWrite(D3, LOW);
+    pinMode(led, OUTPUT);
+    digitalWrite(led, LOW);
 
     // UART
     pinMode(rxPin, INPUT);
@@ -76,16 +78,16 @@ void loop() {
 }
 
 void blink(void) {
-    digitalWrite(D3, HIGH);
+    digitalWrite(led, HIGH);
     delay(250);
-    digitalWrite(D3, LOW);
+    digitalWrite(led, LOW);
     delay(250);
 }
 
 void bilnk_short(void) {
-    digitalWrite(D3, HIGH);
+    digitalWrite(led, HIGH);
     delay(100);
-    digitalWrite(D3, LOW);
+    digitalWrite(led, LOW);
     delay(100);
 }
 
@@ -127,11 +129,6 @@ void serialSend(void) {
 
     if (control.indexOf("on") >= 0)
         switch_online();
-
-    if (control.indexOf("magic") >= 0) {
-        byte cmd[] = {0x08, 0xAD, 0xE0, 0x09, 0xD0, 0x08, 0x08, 0xAD};
-    	send_bytes(cmd, 8);
-    }
 
     if (data != NULL && !data.isEmpty()) {
         byte buf[256];

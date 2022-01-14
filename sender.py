@@ -4,7 +4,6 @@ import httpx
 
 def send(d, c=""):
     a = d.upper().replace(" ", "")
-    print(a)
     try:
         httpx.post("http://192.168.178.25:80/SerialSend",
             data={"control": c, "data": a})
@@ -28,39 +27,46 @@ letters = [
     "Ö", "<", "Ä", "#", "t", "x", "q", "ß",
 
     "ü", "ö", "ä", "y", "k", "p", "h", "c",
-    "g", "n", "r", "s", "e", "a", "i", "b",
+    "g", "n", "r", "s", "e", "a", "i", "d",
 
-    "u", "d", "o", "z",
+    "u", "b", "o", "z",
 ]
 letters_map = {c: (i+1) for (i, c) in enumerate(letters)}
 
 def commands(text):
     out = ""
     for c in text:
-        out += f"{letters_map[c]:02x}ad"
+        if c == " ":
+            out += "8300"
+        else:
+            out += f"{letters_map[c]:02x}ad"
     return out
 
-def typeln(text):
-    cmd = commands(text)
-    cmd += f"e0{12*len(text):02x} d013"
-    send(cmd, "onoff")
-
-send("", "on")
-for k in range(10):
+def cmdln(text: str) -> str:
+    lines = text.split("\n")
     cmd = ""
-    for i in range(10*k+1, 10*k + 11):
-        cmd += f"{i:02x}ad"
-    cmd += "e078 d013"
-    send(cmd)
+    for l in lines:
+        cmd += commands(l)
+        cmd += f"e{12*len(l):03x} d013"
+    return cmd
+
+
+def typeln(text: str):
+    send(cmdln(text), "onoff")
+
+
+
+
+
+
+sleep(20)
+send("", "on")
+send(cmdln("We're no strangers to love"))
+send(cmdln("You know the rules and so do I"))
+send(cmdln("A full commitment's what I'm thinking of"))
+send(cmdln("You wouldn't get this from any other guy"))
 send("", "off")
 
-#send("", "onoffmagic")
-
-#send("08AD E00C D008 08AD", "onoff")
-
 #send("", "on")
-#send("08AD")
-#send("E009")
-#send("D008")
-#send("08AD")
+#send(commands("wah"))
 #send("", "off")
