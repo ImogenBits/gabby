@@ -6,30 +6,21 @@
 
 #define wait_for(c) while(!(c)) yield();
 
-#define SERVER_PORT 80
 const byte txPin = D7;
 const byte rxPin = D1;
-#define DELAY 1
-
 const byte to_gabby = D6;
 const byte from_gabby = D2;
-
 const byte led = D3;
 
 
 ESP8266WebServer server(80);
-
-SoftwareSerial gabbySerial(rxPin, txPin, true);
+SoftwareSerial gabby_serial(rxPin, txPin, true);
 
 void blink(void);
+void handle_root(void);
+void handle_not_found(void);
+void serial_send(void);
 
-void handleRoot(void);
-void handleNotFound(void);
-void serialSend(void);
-
-void switchOnline(void);
-void switchOffline(void);
-void sendCommand(const String &cmd);
 
 void setup() {
     // LED
@@ -48,27 +39,23 @@ void setup() {
     blink();
 
     Serial.begin(115200);
-    Serial.println();
-    Serial.println("wah");
-
-    gabbySerial.begin(4800);
+    gabby_serial.begin(4800);
 
     WiFi.begin(WIFI_NAME, WIFI_PW);
     Serial.print("Connecting");
     blink();
-    while (WiFi.status() != WL_CONNECTED)
-    {
-    delay(500);
-    Serial.print(".");
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
     }
     Serial.println();
     Serial.print("Connected, IP address: ");
     Serial.println(WiFi.localIP());
     blink();
 
-    server.on("/", handleRoot);
-    server.on("/SerialSend", serialSend);
-    server.onNotFound(handleNotFound);
+    server.on("/", handle_root);
+    server.on("/SerialSend", serial_send);
+    server.onNotFound(handle_not_found);
     server.begin();
 
 }
@@ -82,13 +69,6 @@ void blink(void) {
     delay(250);
     digitalWrite(led, LOW);
     delay(250);
-}
-
-void bilnk_short(void) {
-    digitalWrite(led, HIGH);
-    delay(100);
-    digitalWrite(led, LOW);
-    delay(100);
 }
 
 char nyble(byte value) {
@@ -108,18 +88,18 @@ String bytes_to_hex(byte *buf, int count) {
     return out;
 }
 
-void handleRoot(void) {
+void handle_root(void) {
     server.send(200, "text/plain", "Hello world!");
     blink();
 }
 
-void handleNotFound(void) {
+void handle_not_found(void) {
     server.send(404, "text/plain", "404: Not found");
     blink();
     blink();
 }
 
-void serialSend(void) {
+void serial_send(void) {
     if (!server.hasArg("control") || !server.hasArg("data")) {
         server.send(400, "text/plain", "invalid request");
         return;
@@ -175,21 +155,21 @@ void send_bytes(byte data[], byte count) {
 }
 
 String send_command(byte first, byte second) {
-    gabbySerial.write(first);
+    gabby_serial.write(first);
     wait_for(digitalRead(from_gabby) == LOW);
     wait_for(digitalRead(from_gabby) == HIGH);
-    gabbySerial.write(second);
+    gabby_serial.write(second);
     wait_for(digitalRead(from_gabby) == LOW);
     wait_for(digitalRead(from_gabby) == HIGH);
     if ((first & 0xF0) == 0xA0) {
-        wait_for(gabbySerial.available());
+        wait_for(gabby_serial.available());
         byte buf[128];
         int i = 1;
-        buf[0] = gabbySerial.read();
+        buf[0] = gabby_serial.read();
         if (buf[0] == 0xA4) {
             delayMicroseconds(2300);
-            while (gabbySerial.available()) {
-                buf[i] = gabbySerial.read();
+            while (gabby_serial.available()) {
+                buf[i] = gabby_serial.read();
                 i++;
                 delayMicroseconds(2300);
             }
