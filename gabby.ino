@@ -105,33 +105,22 @@ void handle_not_found(void) {
 void handle_command(void) {
     if (!server.hasArg("data")
         || server.arg("data") == NULL
-        || server.arg("data").isEmpty()) {
+        || server.arg("data").isEmpty()
+        || server.arg("data").length() % 4 != 0) {
 
         server.send(400, "text/plain", "invalid request");
         return;
     }
     String data = server.arg("data");
+    int len = data.length();
 
-    int data_len = (data.length() / 4) * 4;
-    if (data_len > 10000 || data_len == 0) {
+    if (len > 10000) {
         server.send(400, "text/plain", "command size over 10k chars");
         return;
     }
-    int len = data_len / 2;
 
-    String commands = String();
-    commands.reserve(len);
-    for (int i = 0; i < data_len; i += 2) {
-        commands = (hex_val(data.charAt(i)) << 4) 
-                        | hex_val(data.charAt(i+1));
-    }
-    //Serial.print("sent commands: ");
-    //Serial.println(bytes_to_hex(commands, len));
-
-    for (byte i = 0; i < len; i+=2) {
-        send_command(data[i], data[i+1]);
-        //Serial.print("response: ");
-        //Serial.println(msg);
+    for (int i = 0; i < len; i += 2) {
+        send_command(hex_val(data.charAt(i)), hex_val(data.charAt(i+1)));
     }
 
     blink();
