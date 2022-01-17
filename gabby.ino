@@ -119,8 +119,10 @@ void handle_command(void) {
         return;
     }
 
-    for (int i = 0; i < len; i += 2) {
-        send_command(hex_val(data.charAt(i)), hex_val(data.charAt(i+1)));
+    for (int i = 0; i < len; i += 4) {
+        byte first = (hex_val(data.charAt(i)) << 4) | hex_val(data.charAt(i+1));
+        byte second = (hex_val(data.charAt(i+2)) << 4) | hex_val(data.charAt(i+3));
+        send_command(first, second);
     }
 
     blink();
