@@ -64,6 +64,14 @@ void setup() {
 
 void loop() {
     server.handleClient();
+    if (gabby_serial.available()) {
+        digitalWrite(to_gabby, LOW);
+        delay(1);
+        digitalWrite(to_gabby, HIGH);
+        if (gabby_serial.read() == 0x01) {
+            ESP.reset();
+        }
+    }
 }
 
 //* util
