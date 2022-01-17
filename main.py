@@ -1,3 +1,3 @@
 import sender
 
-sender.write("waah!", True)
+sender.writeln("test " * 20)

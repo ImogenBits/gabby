@@ -67,3 +67,6 @@ def write(text: str, switch_on_off: Boolean=False):
 
     if response is not None and response.status_code != 200:
         print(f"Error {response.status_code}: {response.content}")
+
+def writeln(text: str):
+    write(text + "\n", True)
