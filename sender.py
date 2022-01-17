@@ -2,11 +2,10 @@ from re import escape
 from time import sleep
 import httpx
 
-def send(d, c=""):
+def send(d):
     a = d.upper().replace(" ", "")
     try:
-        httpx.post("http://192.168.178.25:80/SerialSend",
-            data={"control": c, "data": a})
+        print(httpx.post("http://192.168.178.25:80/", data={"data": a}).content)
     except Exception as e:
         print(e)
 
@@ -52,21 +51,22 @@ def cmdln(text: str) -> str:
 
 
 def typeln(text: str):
-    send(cmdln(text), "onoff")
+    send(cmdln(text))
 
 
 
 
 
 
-sleep(20)
-send("", "on")
-send(cmdln("We're no strangers to love"))
-send(cmdln("You know the rules and so do I"))
-send(cmdln("A full commitment's what I'm thinking of"))
-send(cmdln("You wouldn't get this from any other guy"))
-send("", "off")
+send(cmdln("A" * (3000)))
 
-#send("", "on")
-#send(commands("wah"))
-#send("", "off")
+
+"""void switch_online(void) {
+    byte data[] = {0xA0, 0x00, 0xA1, 0x00, 0xA4, 0x00, 0xA2, 0x00};
+    send_bytes(data, 8);
+}
+
+void switch_offline(void) {
+    byte data[] = {0xA3, 0x00, 0xA0, 0x00};
+    send_bytes(data, 4);
+}"""

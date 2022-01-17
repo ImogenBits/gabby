@@ -6,35 +6,37 @@
 
 #define wait_for(c) while(!(c)) yield();
 
+void blink(void);
+void handle_not_found(void);
+void handle_command(void);
+
+// serial connection
 const byte txPin = D7;
 const byte rxPin = D1;
+
+// control signals
 const byte to_gabby = D6;
 const byte from_gabby = D2;
-const byte led = D3;
 
+// status LED
+const byte led = D3;
 
 ESP8266WebServer server(80);
 SoftwareSerial gabby_serial(rxPin, txPin, true);
 
-void blink(void);
-void handle_root(void);
-void handle_not_found(void);
-void serial_send(void);
-
-
 void setup() {
-    // LED
-    pinMode(led, OUTPUT);
-    digitalWrite(led, LOW);
-
-    // UART
+    // serial connection
     pinMode(rxPin, INPUT);
     pinMode(txPin, OUTPUT);
 
-    // handshake
+    // control signals
     pinMode(to_gabby, OUTPUT);
     digitalWrite(to_gabby, HIGH);
     pinMode(from_gabby, INPUT);
+
+    // LED
+    pinMode(led, OUTPUT);
+    digitalWrite(led, LOW);
 
     blink();
 
@@ -42,6 +44,7 @@ void setup() {
     gabby_serial.begin(4800);
 
     WiFi.begin(WIFI_NAME, WIFI_PW);
+    Serial.println("");
     Serial.print("Connecting");
     blink();
     while (WiFi.status() != WL_CONNECTED) {
@@ -51,24 +54,28 @@ void setup() {
     Serial.println();
     Serial.print("Connected, IP address: ");
     Serial.println(WiFi.localIP());
-    blink();
 
-    server.on("/", handle_root);
-    server.on("/SerialSend", serial_send);
+    server.on("/", handle_command);
     server.onNotFound(handle_not_found);
     server.begin();
 
+    blink();
 }
 
 void loop() {
     server.handleClient();
 }
 
+//* util
 void blink(void) {
     digitalWrite(led, HIGH);
     delay(250);
     digitalWrite(led, LOW);
     delay(250);
+}
+
+byte hex_val(char c) {
+    return (c >= 'A') ? (c - 'A' + 10) : (c - '0');
 }
 
 char nyble(byte value) {
@@ -88,70 +95,47 @@ String bytes_to_hex(byte *buf, int count) {
     return out;
 }
 
-void handle_root(void) {
-    server.send(200, "text/plain", "Hello world!");
-    blink();
-}
-
+//* handlers
 void handle_not_found(void) {
     server.send(404, "text/plain", "404: Not found");
     blink();
     blink();
 }
 
-void serial_send(void) {
-    if (!server.hasArg("control") || !server.hasArg("data")) {
+void handle_command(void) {
+    if (!server.hasArg("data")
+        || server.arg("data") == NULL
+        || server.arg("data").isEmpty()) {
+
         server.send(400, "text/plain", "invalid request");
         return;
     }
-    String control = server.arg("control");
     String data = server.arg("data");
 
-    if (control.indexOf("on") >= 0)
-        switch_online();
-
-    if (data != NULL && !data.isEmpty()) {
-        byte buf[256];
-        data.getBytes(buf, 256);
-        int len = data.length() > 256 ? 256 : data.length();
-        len = (len / 4) * 4;
-        byte commands[128];
-        for (int i = 0; i < len; i += 2) {
-            int a = (buf[i] >= 'A') ? (buf[i] - 'A' + 10) : (buf[i] - '0');
-            a <<= 4;
-            a |= (buf[i+1] >= 'A') ? (buf[i+1] - 'A' + 10) : (buf[i+1] - '0');
-            commands[i/2] = a;
-        }
-        if (len/2 > 0) {
-            Serial.print("bleh: ");
-            Serial.println(bytes_to_hex(commands, len/2));
-            send_bytes(commands, len/2);
-        }
+    int data_len = (data.length() / 4) * 4;
+    if (data_len > 10000 || data_len == 0) {
+        server.send(400, "text/plain", "command size over 10k chars");
+        return;
     }
+    int len = data_len / 2;
 
-    if (control.indexOf("off") >= 0)
-        switch_offline();
+    String commands = String();
+    commands.reserve(len);
+    for (int i = 0; i < data_len; i += 2) {
+        commands = (hex_val(data.charAt(i)) << 4) 
+                        | hex_val(data.charAt(i+1));
+    }
+    //Serial.print("sent commands: ");
+    //Serial.println(bytes_to_hex(commands, len));
+
+    for (byte i = 0; i < len; i+=2) {
+        send_command(data[i], data[i+1]);
+        //Serial.print("response: ");
+        //Serial.println(msg);
+    }
 
     blink();
     server.send(200, "text/plain", "Sent data");
-}
-
-void switch_online(void) {
-    byte data[] = {0xA0, 0x00, 0xA1, 0x00, 0xA4, 0x00, 0xA2, 0x00};
-    send_bytes(data, 8);
-}
-
-void switch_offline(void) {
-    byte data[] = {0xA3, 0x00, 0xA0, 0x00};
-    send_bytes(data, 4);
-}
-
-void send_bytes(byte data[], byte count) {
-    for (byte i = 0; i < count; i+=2) {
-        String msg = send_command(data[i], data[i+1]);
-        Serial.print("response: ");
-        Serial.println(msg);
-    }
 }
 
 String send_command(byte first, byte second) {
@@ -178,6 +162,5 @@ String send_command(byte first, byte second) {
         delay(1);
         digitalWrite(to_gabby, HIGH);
         return bytes_to_hex(buf, i);
-    } else
-        return String();
+    }
 }
