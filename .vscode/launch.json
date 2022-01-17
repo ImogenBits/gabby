@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Send",
+            "name": "main",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}\\sender.py",
+            "program": "${workspaceFolder}\\main.py",
             "console": "integratedTerminal"
         }
     ]

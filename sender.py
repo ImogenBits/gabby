@@ -1,14 +1,12 @@
-from re import escape
+from __future__ import annotations
 from time import sleep
-import httpx
+from xmlrpc.client import Boolean
+from httpx import post, Response
 
-def send(d):
-    a = d.upper().replace(" ", "")
-    try:
-        print(httpx.post("http://192.168.178.25:80/", data={"data": a}).content)
-    except Exception as e:
-        print(e)
+#* Types
+Commands = str
 
+#* Constants
 letters = [
     ".", ",", "-", "v", "l", "m", "j", "w",
     "²", "µ", "f", "^", ">", "´", "+", "1",
@@ -32,7 +30,18 @@ letters = [
 ]
 letters_map = {c: (i+1) for (i, c) in enumerate(letters)}
 
-def commands(text):
+online_cmd = "A0 00 A1 00 A4 00 A2 00"
+offline_cmd = "A3 00 A0 00"
+
+#* functions
+def send(commands: Commands) -> Response | None:
+    cmd = commands.upper().replace(" ", "")
+    try:
+        return post("http://192.168.178.25:80/", data={"data": cmd})
+    except Exception as e:
+        print(e)
+
+def encode(text) -> Commands:
     out = ""
     for c in text:
         if c == " ":
@@ -41,32 +50,20 @@ def commands(text):
             out += f"{letters_map[c]:02x}ad"
     return out
 
-def cmdln(text: str) -> str:
+def parse_and_encode(text: str) -> Commands:
     lines = text.split("\n")
     cmd = ""
     for l in lines:
-        cmd += commands(l)
+        cmd += encode(l)
         cmd += f"e{12*len(l):03x} d013"
     return cmd
 
+def write(text: str, switch_on_off: Boolean=False):
+    cmd = parse_and_encode(text)
+    if switch_on_off:
+        cmd = online_cmd + cmd + offline_cmd
+    
+    response = send(cmd)
 
-def typeln(text: str):
-    send(cmdln(text))
-
-
-
-
-
-
-send(cmdln("A" * (3000)))
-
-
-"""void switch_online(void) {
-    byte data[] = {0xA0, 0x00, 0xA1, 0x00, 0xA4, 0x00, 0xA2, 0x00};
-    send_bytes(data, 8);
-}
-
-void switch_offline(void) {
-    byte data[] = {0xA3, 0x00, 0xA0, 0x00};
-    send_bytes(data, 4);
-}"""
+    if response is not None and response.status_code != 200:
+        print(f"Error {response.status_code}: {response.content}")
