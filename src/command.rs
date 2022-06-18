@@ -56,8 +56,7 @@ impl TryFrom<Direction> for HorizontalDir {
 }
 
 //* Commands themselves
-trait Command {
-    const ID: u16;
+pub trait Command {
     fn encode(&self) -> EncodedCmd;
 }
 type EncodedCmd = u16;
@@ -100,10 +99,8 @@ impl Move {
 }
 
 impl Command for Move {
-    const ID: u16 = 0xC000;
-
     fn encode(&self) -> EncodedCmd {
-        Self::ID
+        0xC000
             | match self.direction {
                 Direction::Left => 0b10 << 12,
                 Direction::Right => 0b00 << 12,
@@ -121,10 +118,8 @@ struct HomePosition {
 }
 
 impl Command for HomePosition {
-    const ID: u16 = 0x8200;
-
     fn encode(&self) -> EncodedCmd {
-        Self::ID
+        0x8200
             | if self.carriage { 1 << 8 } else { 0 }
             | if self.color_tape { 1 << 9 } else { 0 }
             | if self.type_wheel { 1 << 10 } else { 0 }
@@ -156,7 +151,19 @@ enum Control {
     Etx,
     Enq,
 }
-
 use Control::*;
-const ONLINE: [Control; 4] = [Clear, Start, Enq, Stx];
-const OFFLINE: [Control; 2] = [Etx, Clear];
+
+impl Command for Control {
+    fn encode(&self) -> EncodedCmd {
+        match self {
+            Clear => 0xA000,
+            Start => 0xA100,
+            Stx => 0xA200,
+            Etx => 0xA300,
+            Enq => 0xA400,
+        }
+    }
+}
+
+pub const ONLINE: [&dyn Command; 4] = [&Clear, &Start, &Enq, &Stx];
+pub const OFFLINE: [&dyn Command; 2] = [&Etx, &Clear];

@@ -67,26 +67,11 @@ void loop() {
         blink();
         while (client.connected()) {
             if (gabby_serial.available()) {
-                /*byte buf[128];
-                int i = 1;
-                buf[0] = gabby_serial.read();
-                if (buf[0] == 0xA4) {
-                    delayMicroseconds(2300);
-                    while (gabby_serial.available()) {
-                        buf[i] = gabby_serial.read();
-                        i++;
-                        delayMicroseconds(2300);
-                    }
-                }*/
                 byte data = gabby_serial.read();
                 client.write(data);
                 digitalWrite(to_gabby, LOW);
                 delay(1);
-                digitalWrite(to_gabby, HIGH);   
-
-                /*for (int j = 0; j < i; j++) {
-                    client.write(buf[j]);
-                }*/
+                digitalWrite(to_gabby, HIGH);
             }
             if (client.available()) {
                 byte first = client.read();
