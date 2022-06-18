@@ -19,7 +19,6 @@ impl Typewriter {
     }
 
     fn send(&mut self, data: &[&dyn Command]) -> io::Result<()>{
-        assert!(data.len() % 2 == 0);
         for cmd in data {
             let cmd = cmd.encode();
             self.stream.write(&cmd.to_be_bytes())?;
