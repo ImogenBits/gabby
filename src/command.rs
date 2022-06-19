@@ -222,7 +222,7 @@ impl Default for Space {
 
 impl Command for Space {
     fn encode(&self) -> EncodedCmd {
-        0x8003 | (self.distance as u16)
+        0x8300 | (self.distance as u16)
     }
 }
 

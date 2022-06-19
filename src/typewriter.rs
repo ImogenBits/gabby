@@ -141,7 +141,7 @@ impl Typewriter {
                 '\n' => {
                     self.newline();
                     self.carriage_return();
-                }
+                },
                 ' ' => self.space(),
                 _ => self.print_char(c),
             }
