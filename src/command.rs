@@ -1,5 +1,6 @@
 #![allow(dead_code)]
-use std::num::NonZeroU8;
+use std::{num::NonZeroU8, collections::HashMap};
+use lazy_static::lazy_static;
 
 //* Directions to use with movement commands
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -139,11 +140,40 @@ pub struct Write {
 impl Write {
     fn new(letter: char, thickness: u8, movement: Option<HorizontalDir>) -> Self {
         Self {
-            letter: 31,
+            letter: *LETTERS_MAP.get(&letter).unwrap_or(&1),
             thickness,
             movement,
         }
     }
+
+    fn char(letter: char) -> Self {
+        Self::new(letter, 42, Some(HorizontalDir::Right))
+    }
+}
+
+lazy_static!{
+    static ref LETTERS: [char; 100] = [
+        '.', ',', '-', 'v', 'l', 'm', 'j', 'w',
+        '²', 'µ', 'f', '^', '>', '´', '+', '1',
+
+        '2', '3', '4', '5', '6', '7', '8', '9',
+        '0', 'E', '£', 'B', 'F', 'P', 'S', 'Z',
+
+        'V', '&', 'Y', 'A', 'T', 'L', '$', 'R',
+        '*', 'C', '\'', 'D', '?', 'N', 'I', 'U',
+
+        ')', 'W', '_', '=', ';', ':', 'M', '\'',
+        'H', '(', 'K', '/', 'O', '!', 'X', '§',
+
+        'Q', 'J', '%', '³', 'G', '°', 'Ü', '`',
+        'Ö', '<', 'Ä', '#', 't', 'x', 'q', 'ß',
+
+        'ü', 'ö', 'ä', 'y', 'k', 'p', 'h', 'c',
+        'g', 'n', 'r', 's', 'e', 'a', 'i', 'd',
+
+        'u', 'b', 'o', 'z',
+    ];
+    static ref LETTERS_MAP: HashMap<char, u8> = LETTERS.iter().enumerate().map(|(i, c)| (*c, (i + 1) as u8)).collect();
 }
 
 impl Command for Write {

@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-#![feature(io_error_other, result_flattening)]
 mod command;
 mod typewriter;
 
