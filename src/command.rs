@@ -138,19 +138,23 @@ pub struct Write {
 
 impl Write {
     fn new(letter: char, thickness: u8, movement: Option<HorizontalDir>) -> Self {
-        Self {letter: 31, thickness, movement}
+        Self {
+            letter: 31,
+            thickness,
+            movement,
+        }
     }
 }
 
 impl Command for Write {
     fn encode(&self) -> EncodedCmd {
         (self.letter as u16) << 8
-        | (self.thickness as u16) << 2
-        | match self.movement {
-            None => 0,
-            Some(HorizontalDir::Right) => 1,
-            Some(HorizontalDir::Left) => 3,
-        }
+            | (self.thickness as u16) << 2
+            | match self.movement {
+                None => 0,
+                Some(HorizontalDir::Right) => 1,
+                Some(HorizontalDir::Left) => 3,
+            }
     }
 }
 
