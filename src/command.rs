@@ -30,7 +30,7 @@ impl From<HorizontalDir> for Direction {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-enum HorizontalDir {
+pub enum HorizontalDir {
     Left,
     Right,
 }
@@ -130,10 +130,28 @@ struct SetCharWidth {
     width: u8,
 }
 
-struct Write {
-    letter: u8,
-    thickness: u8,
-    movement: Option<HorizontalDir>,
+pub struct Write {
+    pub letter: u8,
+    pub thickness: u8,
+    pub movement: Option<HorizontalDir>,
+}
+
+impl Write {
+    fn new(letter: char, thickness: u8, movement: Option<HorizontalDir>) -> Self {
+        Self {letter: 31, thickness, movement}
+    }
+}
+
+impl Command for Write {
+    fn encode(&self) -> EncodedCmd {
+        (self.letter as u16) << 8
+        | (self.thickness as u16) << 2
+        | match self.movement {
+            None => 0,
+            Some(HorizontalDir::Right) => 1,
+            Some(HorizontalDir::Left) => 3,
+        }
+    }
 }
 
 struct Space {

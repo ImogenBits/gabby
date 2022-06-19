@@ -1,8 +1,9 @@
 #![allow(dead_code)]
-#![feature(io_error_other)]
+#![feature(io_error_other, result_flattening)]
 mod command;
 
-use command::{Command, OFFLINE, ONLINE};
+use command::{Command, OFFLINE, ONLINE, HorizontalDir};
+use hex::encode_upper;
 use std::io::{self, Read, Write};
 use std::net::TcpStream;
 
@@ -13,11 +14,11 @@ struct Typewriter {
 impl Typewriter {
     fn new() -> io::Result<Typewriter> {
         let stream = TcpStream::connect("192.168.178.25:80")?;
-        stream.set_nonblocking(true)?;
         Ok(Self { stream })
     }
 
-    fn send(&mut self, data: &[&dyn Command]) -> io::Result<Option<Vec<u8>>> {
+    fn send(&mut self, data: &[&dyn Command]) -> io::Result<Vec<u8>> {
+        let mut ret = vec![];
         for cmd in data {
             let cmd = cmd.encode();
             self.stream.write(&cmd.to_be_bytes())?;
@@ -31,27 +32,50 @@ impl Typewriter {
                         .map_while(Result::ok)
                         .take_while(|x| *x != 0)
                         .collect::<Vec<_>>();
-                    return Ok(Some(reply_data));
+                    ret.extend(reply_data);
                 }
             }
         }
-        Ok(None)
+        Ok(ret)
     }
 
-    fn receive(&mut self) -> io::Result<Option<u8>> {
-        match (&mut self.stream).bytes().next() {
-            Some(Ok(c)) => Ok(Some(c)),
-            Some(Err(ref e)) if e.kind() == io::ErrorKind::WouldBlock => Ok(None),
-            Some(Err(e)) => Err(e),
-            None => Ok(None),
-        }
+    fn receive(&mut self) -> io::Result<u8> {
+        self.stream.set_nonblocking(true)?;
+        let r = (&mut self.stream)
+            .bytes()
+            .next()
+            .ok_or(io::Error::other(""))
+            .flatten();
+        self.stream.set_nonblocking(false)?;
+        r
+    }
+
+    fn data_available(&self) -> bool {
+        let _ = self.stream.set_nonblocking(true);
+        let r = self.stream.peek(&mut [0]).is_ok();
+        let _ = self.stream.set_nonblocking(false);
+        r
     }
 }
 
 fn main() -> io::Result<()> {
     let mut gabby = Typewriter::new()?;
-    gabby.send(&ONLINE)?;
+    let r = encode_upper(&gabby.send(&ONLINE)?);
+    println!("{r}");
+    let r = gabby.send(&[&command::Write {letter: 31, thickness: 42, movement: Some(HorizontalDir::Right)}])?;
+    let r = encode_upper(r);
+    println!("{r}");
+    /*while !gabby.data_available() {
+        std::thread::sleep(std::time::Duration::from_millis(500));
+    }
+    while gabby.data_available() {
+        println!("{}", encode_upper(&[gabby.receive()?]));
+    }
+    println!("TEST");
     gabby.send(&OFFLINE)?;
+    while gabby.data_available() {
+        println!("{}", encode_upper(&[gabby.receive()?]));
+    }*/
 
     Ok(())
 }
