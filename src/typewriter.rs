@@ -31,14 +31,10 @@ impl Typewriter {
         Ok(ret)
     }
 
-    pub fn receive(&mut self) -> io::Result<u8> {
-        self.stream.set_nonblocking(true)?;
-        let r = (&mut self.stream)
-            .bytes()
-            .next()
-            .ok_or(io::Error::other(""))
-            .flatten();
-        self.stream.set_nonblocking(false)?;
+    pub fn receive(&mut self) -> Option<u8> {
+        let _ = self.stream.set_nonblocking(true);
+        let r = (&mut self.stream).bytes().next().and_then(Result::ok);
+        let _ = self.stream.set_nonblocking(false);
         r
     }
 

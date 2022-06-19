@@ -26,8 +26,8 @@ fn main() -> io::Result<()> {
     let r = gabby.send(&OFFLINE)?;
     println!("offline: {}", encode_upper(r));
 
-    while gabby.data_available() {
-        println!("{}", encode_upper(&[gabby.receive()?]));
+    while let Some(c) = gabby.receive() {
+        println!("{}", encode_upper(&[c]));
     }
 
     Ok(())
