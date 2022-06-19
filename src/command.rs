@@ -1,10 +1,10 @@
-#![allow(dead_code)]
-use std::{num::NonZeroU8, collections::HashMap};
+#![allow(dead_code, unused_macros)]
+use std::collections::HashMap;
 use lazy_static::lazy_static;
 
 //* Directions to use with movement commands
 #[derive(Debug, PartialEq, Clone, Copy)]
-enum Direction {
+pub enum Direction {
     Left,
     Right,
     Up,
@@ -62,7 +62,8 @@ pub trait Command: Sync {
 }
 type EncodedCmd = u16;
 
-struct Move {
+#[derive(Debug, Clone, Copy)]
+pub struct Move {
     distance: u16,
     direction: Direction,
 }
@@ -71,7 +72,7 @@ impl Move {
     /// Creates a new movement command.
     ///
     /// Distance moved can be at most 2^16 steps.
-    fn new(distance: u16, direction: Direction) -> Self {
+    pub fn new(distance: u16, direction: Direction) -> Self {
         if distance >= 2_u16.pow(12) {
             panic!()
         }
@@ -82,20 +83,24 @@ impl Move {
         }
     }
 
-    fn left(distance: u16) -> Self {
+    pub fn left(distance: u16) -> Self {
         Self::new(distance, Direction::Left)
     }
 
-    fn right(distance: u16) -> Self {
+    pub fn right(distance: u16) -> Self {
         Self::new(distance, Direction::Right)
     }
 
-    fn up(distance: u16) -> Self {
+    pub fn up(distance: u16) -> Self {
         Self::new(distance, Direction::Up)
     }
 
-    fn down(distance: u16) -> Self {
+    pub fn down(distance: u16) -> Self {
         Self::new(distance, Direction::Down)
+    }
+
+    pub fn newline() -> Self {
+        Self::down(16)
     }
 }
 
@@ -112,7 +117,8 @@ impl Command for Move {
     }
 }
 
-struct HomePosition {
+#[derive(Debug, Clone, Copy)]
+pub struct HomePosition {
     carriage: bool,
     color_tape: bool,
     type_wheel: bool,
@@ -127,10 +133,24 @@ impl Command for HomePosition {
     }
 }
 
-struct SetCharWidth {
+#[derive(Debug, Clone, Copy)]
+pub struct SetCharWidth {
     width: u8,
 }
 
+impl SetCharWidth {
+    pub fn new(width: u8) -> Self {
+        Self {width}
+    }
+}
+
+impl Command for SetCharWidth {
+    fn encode(&self) -> EncodedCmd {
+        0x8000 | (self.width as u16)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct Write {
     pub letter: u8,
     pub thickness: u8,
@@ -192,14 +212,53 @@ impl Command for Write {
     }
 }
 
-struct Space {
-    distance: Option<NonZeroU8>,
+#[derive(Debug, Clone, Copy)]
+pub struct Space {
+    distance: u8,
 }
 
-struct Backspace {
-    distance: Option<NonZeroU8>,
+impl Space {
+    pub fn new(distance: u8) -> Self {
+        Self { distance }
+    }
 }
 
+impl Default for Space {
+    fn default() -> Self {
+        Self::new(0)
+    }
+}
+
+impl Command for Space {
+    fn encode(&self) -> EncodedCmd {
+        0x8003 | (self.distance as u16)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Backspace {
+    distance: u8,
+}
+
+impl Backspace {
+    pub fn new(distance: u8) -> Self {
+        Self { distance }
+    }
+}
+
+impl Default for Backspace {
+    fn default() -> Self {
+        Self::new(0)
+    }
+}
+
+impl Command for Backspace {
+    fn encode(&self) -> EncodedCmd {
+        0x8004 | (self.distance as u16)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum Control {
     Clear,
     Start,
@@ -225,3 +284,14 @@ lazy_static! {
     pub static ref ONLINE: Vec<Box<dyn Command>> = [Clear, Start, Enq, Stx].into_iter().map(|x| Box::new(x) as Box<dyn Command>).collect();
     pub static ref OFFLINE: Vec<Box<dyn Command>> = [Etx, Clear].into_iter().map(|x| Box::new(x) as Box<dyn Command>).collect();
 }
+
+pub fn command_sequence<'a>(commands: &[impl Command + Clone + 'a]) -> Vec<Box<dyn Command + 'a>> {
+    commands.iter().cloned().map(|x| Box::new(x) as _).collect()
+}
+
+#[macro_export]
+macro_rules! cmds {
+    (eval $e:expr) => {::std::vec::Vec::<::std::boxed::Box<dyn $crate::Command>>::new()};
+    ( $($x:expr),+ $(,)? ) => { ::std::vec![ $( ::std::boxed::Box::new($x) as ::std::boxed::Box<dyn $crate::command::Command> ),+ ] };
+}
+

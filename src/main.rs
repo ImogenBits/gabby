@@ -1,24 +1,28 @@
 #![allow(dead_code)]
+#[macro_use]
 mod command;
 mod typewriter;
 
 use command::{OFFLINE, ONLINE};
 use typewriter::Typewriter;
 use std::io;
-use hex::encode_upper;
+
+use crate::command::{SetCharWidth, Move};
 
 
 
 fn main() -> io::Result<()> {
     let mut gabby = Typewriter::new()?;
-    let r = encode_upper(&gabby.send(&ONLINE)?);
-    println!("online: {r}");
+    gabby.send(&ONLINE)?;
 
-    let r = gabby.send(&command::Write::string("waaah!"))?;
-    println!("write S: {}", encode_upper(r));
+    gabby.send(&command::Write::string("HHHH"))?;
+    gabby.send(&cmds![SetCharWidth::new(12), Move::down(12), Move::left(48)])?;
+    gabby.send(&command::Write::string("HHHH"))?;
+    gabby.send(&cmds![SetCharWidth::new(12), Move::down(16), Move::left(48)])?;
+    gabby.send(&command::Write::string("HHHH"))?;
+    gabby.send(&cmds![SetCharWidth::new(12), Move::down(20), Move::left(48)])?;
+    gabby.send(&command::Write::string("HHHH"))?;
 
-    let r = gabby.send(&OFFLINE)?;
-    println!("offline: {}", encode_upper(r));
-
+    gabby.send(&OFFLINE)?;
     Ok(())
 }
