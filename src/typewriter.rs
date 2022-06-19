@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 
-use crate::command::{Command, HorizontalDir, SetCharWidth, cmd, PrintChar, Move, Direction};
+use crate::command::{
+    cmd, Command, Direction, HorizontalDir, Move, PrintChar, SetCharWidth, OFFLINE, ONLINE, Space,
+};
 use std::io::{self, Read, Write};
 use std::net::TcpStream;
 
@@ -81,8 +83,18 @@ impl Typewriter {
         })
     }
 
+    pub fn on(&mut self) {
+        self.send_raw(&ONLINE);
+    }
+
+    pub fn off(&mut self) {
+        self.send_raw(&OFFLINE);
+    }
+
     pub fn send_raw(&mut self, data: &[Box<dyn Command>]) -> Vec<u8> {
-        data.into_iter().flat_map(|cmd| self.stream.send(cmd)).collect()
+        data.into_iter()
+            .flat_map(|cmd| self.stream.send(cmd))
+            .collect()
     }
 
     pub fn set_char_width(&mut self, char_width: u8) {
@@ -97,11 +109,12 @@ impl Typewriter {
     pub fn print_char(&mut self, character: char) {
         let c = PrintChar::new(character, self.print_weight, self.feed_direction);
         self.stream.send(&cmd(c));
-        self.pos.0 = (self.pos.0 as i16 + match self.feed_direction {
-            Some(HorizontalDir::Left) => -(self.char_width as i16),
-            Some(HorizontalDir::Right) => self.char_width as i16,
-            None => 0,
-        }) as u16
+        self.pos.0 = (self.pos.0 as i16
+            + match self.feed_direction {
+                Some(HorizontalDir::Left) => -(self.char_width as i16),
+                Some(HorizontalDir::Right) => self.char_width as i16,
+                None => 0,
+            }) as u16
     }
 
     pub fn newline(&mut self) {
@@ -116,16 +129,22 @@ impl Typewriter {
         self.pos.0 = 0;
     }
 
+    pub fn space(&mut self) {
+        let c = Space::default();
+        self.stream.send(&cmd(c));
+        self.pos.0 += self.char_width as u16;
+    }
+
     pub fn print_string(&mut self, content: &str) {
         for c in content.chars() {
             match c {
                 '\n' => {
                     self.newline();
                     self.carriage_return();
-                },
+                }
+                ' ' => self.space(),
                 _ => self.print_char(c),
             }
         }
     }
-    
 }
