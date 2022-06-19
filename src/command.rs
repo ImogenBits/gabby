@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_macros)]
-use std::collections::HashMap;
 use lazy_static::lazy_static;
+use std::collections::HashMap;
 
 //* Directions to use with movement commands
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -73,10 +73,7 @@ impl Move {
     ///
     /// Distance moved can be at most 2^16 steps.
     pub fn new(distance: u16, direction: Direction) -> Self {
-        if distance >= 2_u16.pow(12) {
-            panic!()
-        }
-
+        assert!(distance < 2_u16.pow(12));
         Self {
             distance,
             direction,
@@ -140,7 +137,7 @@ pub struct SetCharWidth {
 
 impl SetCharWidth {
     pub fn new(width: u8) -> Self {
-        Self {width}
+        Self { width }
     }
 }
 
@@ -151,13 +148,13 @@ impl Command for SetCharWidth {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Write {
+pub struct PrintChar {
     pub letter: u8,
     pub thickness: u8,
     pub movement: Option<HorizontalDir>,
 }
 
-impl Write {
+impl PrintChar {
     pub fn new(letter: char, thickness: u8, movement: Option<HorizontalDir>) -> Self {
         Self {
             letter: *LETTERS_MAP.get(&letter).unwrap_or(&1),
@@ -171,36 +168,30 @@ impl Write {
     }
 
     pub fn string(letters: &str) -> Vec<Box<dyn Command>> {
-        letters.chars().map(|c| Box::new(Self::char(c)) as Box<dyn Command>).collect()
+        letters
+            .chars()
+            .map(|c| Box::new(Self::char(c)) as Box<dyn Command>)
+            .collect()
     }
 }
 
-lazy_static!{
+lazy_static! {
     static ref LETTERS: [char; 100] = [
-        '.', ',', '-', 'v', 'l', 'm', 'j', 'w',
-        '²', 'µ', 'f', '^', '>', '´', '+', '1',
-
-        '2', '3', '4', '5', '6', '7', '8', '9',
-        '0', 'E', '£', 'B', 'F', 'P', 'S', 'Z',
-
-        'V', '&', 'Y', 'A', 'T', 'L', '$', 'R',
-        '*', 'C', '\'', 'D', '?', 'N', 'I', 'U',
-
-        ')', 'W', '_', '=', ';', ':', 'M', '\'',
-        'H', '(', 'K', '/', 'O', '!', 'X', '§',
-
-        'Q', 'J', '%', '³', 'G', '°', 'Ü', '`',
-        'Ö', '<', 'Ä', '#', 't', 'x', 'q', 'ß',
-
-        'ü', 'ö', 'ä', 'y', 'k', 'p', 'h', 'c',
-        'g', 'n', 'r', 's', 'e', 'a', 'i', 'd',
-
-        'u', 'b', 'o', 'z',
+        '.', ',', '-', 'v', 'l', 'm', 'j', 'w', '²', 'µ', 'f', '^', '>', '´', '+', '1', '2', '3',
+        '4', '5', '6', '7', '8', '9', '0', 'E', '£', 'B', 'F', 'P', 'S', 'Z', 'V', '&', 'Y', 'A',
+        'T', 'L', '$', 'R', '*', 'C', '\'', 'D', '?', 'N', 'I', 'U', ')', 'W', '_', '=', ';', ':',
+        'M', '\'', 'H', '(', 'K', '/', 'O', '!', 'X', '§', 'Q', 'J', '%', '³', 'G', '°', 'Ü', '`',
+        'Ö', '<', 'Ä', '#', 't', 'x', 'q', 'ß', 'ü', 'ö', 'ä', 'y', 'k', 'p', 'h', 'c', 'g', 'n',
+        'r', 's', 'e', 'a', 'i', 'd', 'u', 'b', 'o', 'z',
     ];
-    static ref LETTERS_MAP: HashMap<char, u8> = LETTERS.iter().enumerate().map(|(i, c)| (*c, (i + 1) as u8)).collect();
+    static ref LETTERS_MAP: HashMap<char, u8> = LETTERS
+        .iter()
+        .enumerate()
+        .map(|(i, c)| (*c, (i + 1) as u8))
+        .collect();
 }
 
-impl Command for Write {
+impl Command for PrintChar {
     fn encode(&self) -> EncodedCmd {
         (self.letter as u16) << 8
             | (self.thickness as u16) << 2
@@ -281,8 +272,14 @@ impl Command for Control {
 }
 
 lazy_static! {
-    pub static ref ONLINE: Vec<Box<dyn Command>> = [Clear, Start, Enq, Stx].into_iter().map(|x| Box::new(x) as Box<dyn Command>).collect();
-    pub static ref OFFLINE: Vec<Box<dyn Command>> = [Etx, Clear].into_iter().map(|x| Box::new(x) as Box<dyn Command>).collect();
+    pub static ref ONLINE: Vec<Box<dyn Command>> = [Clear, Start, Enq, Stx]
+        .into_iter()
+        .map(|x| Box::new(x) as Box<dyn Command>)
+        .collect();
+    pub static ref OFFLINE: Vec<Box<dyn Command>> = [Etx, Clear]
+        .into_iter()
+        .map(|x| Box::new(x) as Box<dyn Command>)
+        .collect();
 }
 
 pub fn command_sequence<'a>(commands: &[impl Command + Clone + 'a]) -> Vec<Box<dyn Command + 'a>> {
@@ -295,3 +292,6 @@ macro_rules! cmds {
     ( $($x:expr),+ $(,)? ) => { ::std::vec![ $( ::std::boxed::Box::new($x) as ::std::boxed::Box<dyn $crate::command::Command> ),+ ] };
 }
 
+pub fn cmd<'a>(cmd: impl Command + 'a) -> Box<dyn Command + 'a> {
+    Box::new(cmd)
+}

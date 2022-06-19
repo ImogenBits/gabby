@@ -6,25 +6,35 @@ mod command;
 mod typewriter;
 
 use command::{OFFLINE, ONLINE};
-use typewriter::Typewriter;
 use std::io;
+use typewriter::Typewriter;
 
-use crate::command::{SetCharWidth, Move};
-
-
+use crate::command::{Move, SetCharWidth};
 
 fn main() -> io::Result<()> {
     let mut gabby = Typewriter::new()?;
-    gabby.send(&ONLINE)?;
+    gabby.send_raw(&ONLINE);
 
-    gabby.send(&command::Write::string("HHHH"))?;
-    gabby.send(&cmds![SetCharWidth::new(12), Move::down(12), Move::left(48)])?;
-    gabby.send(&command::Write::string("HHHH"))?;
-    gabby.send(&cmds![SetCharWidth::new(12), Move::down(16), Move::left(48)])?;
-    gabby.send(&command::Write::string("HHHH"))?;
-    gabby.send(&cmds![SetCharWidth::new(12), Move::down(20), Move::left(48)])?;
-    gabby.send(&command::Write::string("HHHH"))?;
+    gabby.send_raw(&command::PrintChar::string("HHHH"));
+    gabby.send_raw(&cmds![
+        SetCharWidth::new(12),
+        Move::down(12),
+        Move::left(48)
+    ]);
+    gabby.send_raw(&command::PrintChar::string("HHHH"));
+    gabby.send_raw(&cmds![
+        SetCharWidth::new(12),
+        Move::down(16),
+        Move::left(48)
+    ]);
+    gabby.send_raw(&command::PrintChar::string("HHHH"));
+    gabby.send_raw(&cmds![
+        SetCharWidth::new(12),
+        Move::down(20),
+        Move::left(48)
+    ]);
+    gabby.send_raw(&command::PrintChar::string("HHHH"));
 
-    gabby.send(&OFFLINE)?;
+    gabby.send_raw(&OFFLINE);
     Ok(())
 }
