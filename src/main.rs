@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+#![feature(io_error_other)]
+
 #[macro_use]
 mod command;
 mod typewriter;
