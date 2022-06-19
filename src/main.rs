@@ -22,19 +22,14 @@ impl Typewriter {
         for cmd in data {
             let cmd = cmd.encode();
             self.stream.write(&cmd.to_be_bytes())?;
-            if (cmd & 0xF000) == 0xA000 {
-                let mut buf = [0];
-                self.stream.read_exact(&mut buf)?;
-                let reply = buf[0];
-                if reply == 0xA4 {
-                    let reply_data = (&mut self.stream)
-                        .bytes()
-                        .map_while(Result::ok)
-                        .take_while(|x| *x != 0)
-                        .collect::<Vec<_>>();
-                    ret.extend(reply_data);
-                }
-            }
+            let mut buf = [0];
+            self.stream.read_exact(&mut buf)?;
+            let len = buf[0];
+            let mut reply = Vec::with_capacity(len as usize);
+            (&mut self.stream)
+                .take(len as u64)
+                .read_to_end(&mut reply)?;
+            ret.extend(reply);
         }
         Ok(ret)
     }
@@ -61,21 +56,19 @@ impl Typewriter {
 fn main() -> io::Result<()> {
     let mut gabby = Typewriter::new()?;
     let r = encode_upper(&gabby.send(&ONLINE)?);
-    println!("{r}");
-    let r = gabby.send(&[&command::Write {letter: 31, thickness: 42, movement: Some(HorizontalDir::Right)}])?;
-    let r = encode_upper(r);
-    println!("{r}");
-    /*while !gabby.data_available() {
-        std::thread::sleep(std::time::Duration::from_millis(500));
-    }
+    println!("online: {r}");
+
+    let c = command::Write {letter: 31, thickness: 42, movement: Some(HorizontalDir::Right)};
+    let r = gabby.send(&[&c, &c, &c, &c, &c, &c, &c])?;
+    println!("write S: {}", encode_upper(r));
+
+    let r = gabby.send(&OFFLINE)?;
+    println!("offline: {}", encode_upper(r));
+
+    
     while gabby.data_available() {
         println!("{}", encode_upper(&[gabby.receive()?]));
     }
-    println!("TEST");
-    gabby.send(&OFFLINE)?;
-    while gabby.data_available() {
-        println!("{}", encode_upper(&[gabby.receive()?]));
-    }*/
 
     Ok(())
 }

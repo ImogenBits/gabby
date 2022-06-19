@@ -82,11 +82,12 @@ void loop() {
                 gabby_serial.write(second);
                 wait_for(digitalRead(from_gabby) == LOW);
                 wait_for(digitalRead(from_gabby) == HIGH);
+                byte buf[128];
+                int i = 0;
                 if ((first & 0xF0) == 0xA0) {
                     wait_for(gabby_serial.available());
-                    byte buf[128];
-                    int i = 1;
                     buf[0] = gabby_serial.read();
+                    i++;
                     if (buf[0] == 0xA4) {
                         delayMicroseconds(2300);
                         while (gabby_serial.available()) {
@@ -98,9 +99,10 @@ void loop() {
                     digitalWrite(to_gabby, LOW);
                     delay(1);
                     digitalWrite(to_gabby, HIGH);
-                    for (int j = 0; j < i; j++) {
-                        client.write(buf[j]);
-                    }
+                }
+                client.write(i);
+                for (int j = 0; j < i; j++) {
+                    client.write(buf[j]);
                 }
             }
         }
