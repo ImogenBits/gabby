@@ -57,7 +57,7 @@ impl TryFrom<Direction> for HorizontalDir {
 }
 
 //* Commands themselves
-pub trait Command {
+pub trait Command: Sync {
     fn encode(&self) -> EncodedCmd;
 }
 type EncodedCmd = u16;
@@ -138,7 +138,7 @@ pub struct Write {
 }
 
 impl Write {
-    fn new(letter: char, thickness: u8, movement: Option<HorizontalDir>) -> Self {
+    pub fn new(letter: char, thickness: u8, movement: Option<HorizontalDir>) -> Self {
         Self {
             letter: *LETTERS_MAP.get(&letter).unwrap_or(&1),
             thickness,
@@ -146,8 +146,12 @@ impl Write {
         }
     }
 
-    fn char(letter: char) -> Self {
+    pub fn char(letter: char) -> Self {
         Self::new(letter, 42, Some(HorizontalDir::Right))
+    }
+
+    pub fn string(letters: &str) -> Vec<Box<dyn Command>> {
+        letters.chars().map(|c| Box::new(Self::char(c)) as Box<dyn Command>).collect()
     }
 }
 
@@ -196,7 +200,7 @@ struct Backspace {
     distance: Option<NonZeroU8>,
 }
 
-enum Control {
+pub enum Control {
     Clear,
     Start,
     Stx,
@@ -217,5 +221,7 @@ impl Command for Control {
     }
 }
 
-pub const ONLINE: [&dyn Command; 4] = [&Clear, &Start, &Enq, &Stx];
-pub const OFFLINE: [&dyn Command; 2] = [&Etx, &Clear];
+lazy_static! {
+    pub static ref ONLINE: Vec<Box<dyn Command>> = [Clear, Start, Enq, Stx].into_iter().map(|x| Box::new(x) as Box<dyn Command>).collect();
+    pub static ref OFFLINE: Vec<Box<dyn Command>> = [Etx, Clear].into_iter().map(|x| Box::new(x) as Box<dyn Command>).collect();
+}

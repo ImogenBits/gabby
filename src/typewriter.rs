@@ -14,7 +14,7 @@ impl Typewriter {
         Ok(Self { stream })
     }
 
-    pub fn send(&mut self, data: &[&dyn Command]) -> io::Result<Vec<u8>> {
+    pub fn send(&mut self, data: &[Box<dyn Command>]) -> io::Result<Vec<u8>> {
         let mut ret = vec![];
         for cmd in data {
             let cmd = cmd.encode();
