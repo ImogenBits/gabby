@@ -59,13 +59,12 @@ impl Iterator for StreamInterface {
 
 pub struct Typewriter {
     stream: StreamInterface,
-    pos: (u16, u16),
+    pos: (i16, i16),
     line_start: u8,
     char_width: u8,
-    pub line_height: u16,
     pub print_weight: u8,
+    pub line_height: u16,
     pub feed_direction: Option<HorizontalDir>,
-    pub print_strength: u8,
 }
 
 impl Typewriter {
@@ -77,9 +76,8 @@ impl Typewriter {
             line_start: 0,
             char_width: 12,
             line_height: 16,
-            print_weight: 42,
+            print_weight: 25,
             feed_direction: Some(HorizontalDir::Right),
-            print_strength: 42,
         })
     }
 
@@ -109,22 +107,21 @@ impl Typewriter {
     pub fn print_char(&mut self, character: char) {
         let c = PrintChar::new(character, self.print_weight, self.feed_direction);
         self.stream.send(&cmd(c));
-        self.pos.0 = (self.pos.0 as i16
-            + match self.feed_direction {
+        self.pos.0 += match self.feed_direction {
                 Some(HorizontalDir::Left) => -(self.char_width as i16),
                 Some(HorizontalDir::Right) => self.char_width as i16,
                 None => 0,
-            }) as u16
+            }
     }
 
     pub fn newline(&mut self) {
         let c = Move::new(self.line_height, Direction::Down);
         self.stream.send(&cmd(c));
-        self.pos.1 += self.line_height;
+        self.pos.1 += self.line_height as i16;
     }
 
     pub fn carriage_return(&mut self) {
-        let c = Move::new(self.pos.0, Direction::Left);
+        let c = Move::new(self.pos.0 as u16, Direction::Left);
         self.stream.send(&cmd(c));
         self.pos.0 = 0;
     }
@@ -132,7 +129,7 @@ impl Typewriter {
     pub fn space(&mut self) {
         let c = Space::default();
         self.stream.send(&cmd(c));
-        self.pos.0 += self.char_width as u16;
+        self.pos.0 += self.char_width as i16;
     }
 
     pub fn print_string(&mut self, content: &str) {
@@ -146,5 +143,23 @@ impl Typewriter {
                 _ => self.print_char(c),
             }
         }
+    }
+
+    pub fn move_head(&mut self, x: i16, y: i16) {
+        if x != 0 {
+            let c = Move::new(x.abs() as u16, if x > 0 {Direction::Right} else {Direction::Left});
+            self.stream.send(&cmd(c));
+            self.pos.0 += x;
+        }
+        if y != 0 {
+            let c = Move::new(y.abs() as u16, if y > 0 {Direction::Down} else {Direction::Up});
+            self.stream.send(&cmd(c));
+            self.pos.1 += y;
+        }
+    }
+
+    pub fn space_var(&mut self, x: u8) {
+        let _ = self.stream.send(&cmd(Space::new(x)));
+        self.pos.0 += x as i16;
     }
 }

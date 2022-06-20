@@ -12,7 +12,14 @@ fn main() -> io::Result<()> {
     let mut gabby = Typewriter::new()?;
     gabby.on();
 
-    gabby.print_string("I am a Wah!\nand I need many headpats :3");
+    gabby.feed_direction = None;
+    for i in 1..=12 {
+        gabby.print_char('.');
+        gabby.move_head(i, 0);
+        gabby.print_char('.');
+        gabby.newline();
+        gabby.carriage_return();
+    }
 
     gabby.off();
     Ok(())
