@@ -1,9 +1,12 @@
 #![allow(dead_code)]
 
+use image::{imageops::FilterType::Gaussian, DynamicImage};
+
 use crate::command::{
-    cmd, Command, Direction, HorizontalDir, Move, PrintChar, SetCharWidth, OFFLINE, ONLINE, Space,
+    cmd, Command, Direction, HorizontalDir, Move, PrintChar, SetCharWidth, Space, OFFLINE, ONLINE,
 };
 use std::io::{self, Read, Write};
+use std::iter::once;
 use std::net::TcpStream;
 
 struct StreamInterface {
@@ -76,7 +79,7 @@ impl Typewriter {
             line_start: 0,
             char_width: 12,
             line_height: 16,
-            print_weight: 25,
+            print_weight: 20,
             feed_direction: Some(HorizontalDir::Right),
         })
     }
@@ -108,10 +111,10 @@ impl Typewriter {
         let c = PrintChar::new(character, self.print_weight, self.feed_direction);
         self.stream.send(&cmd(c));
         self.pos.0 += match self.feed_direction {
-                Some(HorizontalDir::Left) => -(self.char_width as i16),
-                Some(HorizontalDir::Right) => self.char_width as i16,
-                None => 0,
-            }
+            Some(HorizontalDir::Left) => -(self.char_width as i16),
+            Some(HorizontalDir::Right) => self.char_width as i16,
+            None => 0,
+        }
     }
 
     pub fn newline(&mut self) {
@@ -138,7 +141,7 @@ impl Typewriter {
                 '\n' => {
                     self.newline();
                     self.carriage_return();
-                },
+                }
                 ' ' => self.space(),
                 _ => self.print_char(c),
             }
@@ -147,19 +150,52 @@ impl Typewriter {
 
     pub fn move_head(&mut self, x: i16, y: i16) {
         if x != 0 {
-            let c = Move::new(x.abs() as u16, if x > 0 {Direction::Right} else {Direction::Left});
+            let c = Move::new(
+                x.abs() as u16,
+                if x > 0 {
+                    Direction::Right
+                } else {
+                    Direction::Left
+                },
+            );
             self.stream.send(&cmd(c));
             self.pos.0 += x;
         }
         if y != 0 {
-            let c = Move::new(y.abs() as u16, if y > 0 {Direction::Down} else {Direction::Up});
+            let c = Move::new(
+                y.abs() as u16,
+                if y > 0 {
+                    Direction::Down
+                } else {
+                    Direction::Up
+                },
+            );
             self.stream.send(&cmd(c));
             self.pos.1 += y;
         }
     }
 
-    pub fn space_var(&mut self, x: u8) {
-        let _ = self.stream.send(&cmd(Space::new(x)));
-        self.pos.0 += x as i16;
+    pub fn print_image(&mut self, image: DynamicImage, width: u16) {
+        let height = (image.height() as f64 / image.width() as f64 * width as f64) as u32;
+        image
+            .resize_exact(width as u32, height, Gaussian)
+            .grayscale()
+            .into_luma8()
+            .rows()
+            .flat_map(|r| {
+                r.map(|p| {
+                    if p.0[0] < 128 {
+                        cmd(PrintChar::new('.', 15, None))
+                    } else {
+                        cmd(Space::new(3))
+                    }
+                })
+                .chain(once(cmd(Move::new(width * 3, Direction::Left))))
+                .chain(once(cmd(Move::new(2, Direction::Down))))
+            })
+            .for_each(|c| {
+                self.stream.send(&c);
+            });
+        self.pos.1 += 2 * height as i16;
     }
 }

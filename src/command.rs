@@ -194,12 +194,12 @@ lazy_static! {
 impl Command for PrintChar {
     fn encode(&self) -> EncodedCmd {
         (self.letter as u16) << 8
-        | match self.movement {
-            None => 0b00,
-            Some(HorizontalDir::Right) => 0b10,
-            Some(HorizontalDir::Left) => 0b11,
-        } << 6
-        | (self.thickness as u16)
+            | match self.movement {
+                None => 0b00,
+                Some(HorizontalDir::Right) => 0b10,
+                Some(HorizontalDir::Left) => 0b11,
+            } << 6
+            | (self.thickness as u16)
     }
 }
 
