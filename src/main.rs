@@ -34,25 +34,13 @@ fn print_bitmap(bitmap: Vec<Vec<bool>>) {
 }
 
 fn main() -> io::Result<()> {
-    let image = image::open("transgenderlogo.jpg").unwrap();
-    let bitmap = to_bitmap(&image, 20);
-    print_bitmap(bitmap);
-
-
     let mut gabby = Typewriter::new()?;
     gabby.on();
-    gabby.print_image(&image, 20);
 
-    /*gabby.feed_direction = None;
-    for i in [1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1] {
-        if i == 1 {
-            gabby.print_char('.');
-        }
-        gabby.move_head(3, 0);
-    }*/
-
-
-
+    let image = image::open("transgenderlogo.jpg").unwrap();
+    let bitmap = to_bitmap(&image, 100);
+    print_bitmap(bitmap);
+    //gabby.print_image(&image, 100);
 
     gabby.off();
     Ok(())

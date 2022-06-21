@@ -6,7 +6,6 @@ use crate::command::{
     cmd, Command, Direction, HorizontalDir, Move, PrintChar, SetCharWidth, Space, OFFLINE, ONLINE,
 };
 use std::io::{self, Read, Write};
-use itertools::Itertools;
 use std::net::TcpStream;
 
 struct StreamInterface {
@@ -181,33 +180,23 @@ impl Typewriter {
 
     pub fn print_image(&mut self, image: &DynamicImage, width: u16) {
         let height = (image.height() as f64 / image.width() as f64 * width as f64) as u32;
-        let old_char_width = self.char_width;
-        self.set_char_width(3);
-        let image = image
+        let start_pos = self.pos;
+        let old_feed_dir = self.feed_direction;
+        self.feed_direction = None;
+        let olf_weight = self.print_weight;
+        self.print_weight = 15;
+        image
             .resize_exact(width as u32, height, Gaussian)
             .grayscale()
             .into_luma8()
             .enumerate_pixels()
-            .filter(|(x, y, p)| p.0[0] < 128 || (x == 0 && y == 0))
-            .tuple_windows()
-            .map(|((x, y, p), (x2, y2, p2))| )
-            .rows()
-            .flat_map(|r| {
-                r.map(|p| {
-                    if p.0[0] < 128 {
-                        cmd(PrintChar::new('.', 15, Some(HorizontalDir::Right)))
-                    } else {
-                        cmd(Space::new(3))
-                    }
-                })
-                .chain(once(cmd(Move::new(width * 3, Direction::Left))))
-                .chain(once(cmd(Move::new(2, Direction::Down))))
-            })
-            .fol
-            .for_each(|c| {
-                self.stream.send(&c);
+            .filter(|(_, _, p)| p.0[0] < 128)
+            .map(|(x, y, _)| (start_pos.0 + 3 * x as i16, start_pos.1 + 2 * y as i16))
+            .for_each(|(x, y)| {
+                self.move_to(x, y);
+                self.print_char('.')
             });
-        self.pos.1 += 2 * height as i16;
-        self.set_char_width(old_char_width);
+        self.feed_direction = old_feed_dir;
+        self.print_weight = olf_weight;
     }
 }
