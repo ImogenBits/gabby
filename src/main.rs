@@ -6,39 +6,31 @@ mod command;
 mod typewriter;
 
 use image::{imageops::FilterType::Gaussian, DynamicImage};
-use std::io;
+use std::{io, iter::once};
 use typewriter::Typewriter;
 
-fn to_bitmap(image: &DynamicImage, width: u16) -> Vec<Vec<bool>> {
+fn print_image(image: &DynamicImage, width: u16) {
     let height = (image.height() as f64 / image.width() as f64 * width as f64) as u32;
-    image
-        .resize_exact(width as u32, height, Gaussian)
-        .grayscale()
-        .into_luma8()
-        .rows()
-        .map(|r| r.map(|p| p.0[0] < 128).collect())
-        .collect()
-}
-
-fn print_bitmap(bitmap: Vec<Vec<bool>>) {
-    let out = bitmap
-        .into_iter()
-        .map(|r| {
-            r.into_iter()
-                .map(|b| if b { '.' } else { ' ' })
-                .collect::<String>()
-        })
-        .collect::<Vec<String>>()
-        .join("\n");
-    println!("{out}");
+    println!(
+        "{}",
+        image
+            .resize_exact(width as u32, height, Gaussian)
+            .grayscale()
+            .into_luma8()
+            .rows()
+            .flat_map(|r| {
+                r.map(|p| if p.0[0] < 128 { '.' } else { ' ' })
+                    .chain(once('\n'))
+            })
+            .collect::<String>()
+    );
 }
 
 fn main() -> io::Result<()> {
-    let mut gabby = Typewriter::new()?;
+    //let mut gabby = Typewriter::new()?;
 
     let image = image::open("transgenderlogo.jpg").unwrap();
-    let bitmap = to_bitmap(&image, 100);
-    print_bitmap(bitmap);
+    print_image(&image, 100);
     //gabby.print_image(&image, 100);
 
     Ok(())
