@@ -35,13 +35,11 @@ fn print_bitmap(bitmap: Vec<Vec<bool>>) {
 
 fn main() -> io::Result<()> {
     let mut gabby = Typewriter::new()?;
-    gabby.on();
 
     let image = image::open("transgenderlogo.jpg").unwrap();
     let bitmap = to_bitmap(&image, 100);
     print_bitmap(bitmap);
     //gabby.print_image(&image, 100);
 
-    gabby.off();
     Ok(())
 }

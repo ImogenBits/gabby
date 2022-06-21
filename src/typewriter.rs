@@ -72,7 +72,7 @@ pub struct Typewriter {
 impl Typewriter {
     pub fn new() -> io::Result<Typewriter> {
         let stream = StreamInterface::new()?;
-        Ok(Self {
+        let mut s = Self {
             stream,
             pos: (0, 0),
             line_start: 0,
@@ -80,7 +80,9 @@ impl Typewriter {
             line_height: 16,
             print_weight: 20,
             feed_direction: Some(HorizontalDir::Right),
-        })
+        };
+        s.on();
+        Ok(s)
     }
 
     pub fn on(&mut self) {
@@ -198,5 +200,11 @@ impl Typewriter {
             });
         self.feed_direction = old_feed_dir;
         self.print_weight = olf_weight;
+    }
+}
+
+impl Drop for Typewriter {
+    fn drop(&mut self) {
+        self.off();
     }
 }
