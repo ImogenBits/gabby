@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use image::{imageops::FilterType::Gaussian, DynamicImage};
+use image::GrayImage;
 
 use crate::command::{
     cmd, Command, Direction, HorizontalDir, Move, PrintChar, SetCharWidth, Space, OFFLINE, ONLINE,
@@ -180,17 +180,16 @@ impl Typewriter {
         self.move_head(x - self.pos.0, y - self.pos.1)
     }
 
-    pub fn print_image(&mut self, image: &DynamicImage, width: u16) {
-        let height = (image.height() as f64 / image.width() as f64 * width as f64) as u32;
+    pub fn print_image(&mut self, image: &GrayImage) {
+        if image.height() > 300 {
+            return;
+        }
         let start_pos = self.pos;
         let old_feed_dir = self.feed_direction;
         self.feed_direction = None;
         let olf_weight = self.print_weight;
         self.print_weight = 15;
         image
-            .resize_exact(width as u32, height, Gaussian)
-            .grayscale()
-            .into_luma8()
             .enumerate_pixels()
             .filter(|(_, _, p)| p.0[0] < 128)
             .map(|(x, y, _)| (start_pos.0 + 3 * x as i16, start_pos.1 + 2 * y as i16))
