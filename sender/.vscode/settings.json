@@ -1,6 +1,4 @@
 {
-    "python.pythonPath": "C:\\Users\\Imogen\\.conda\\envs\\gabby\\python.exe",
-    "python.analysis.typeCheckingMode": "basic",
     "files.associations": {
         "unordered_map": "cpp",
         "*.sage": "python",
