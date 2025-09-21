@@ -158,7 +158,7 @@ class Connection:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def start(self) -> None:
-        self.sock.connect(("192.168.178.25:80", 80))
+        self.sock.connect(("192.168.178.25", 80))
 
     def receive(self) -> Packet:
         received = self.sock.recv(1)[0]
