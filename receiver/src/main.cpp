@@ -55,7 +55,6 @@ void setup() {
     Serial.print("Connected, IP address: ");
     Serial.println(WiFi.localIP());
 
-    
     server.begin();
 
     blink();

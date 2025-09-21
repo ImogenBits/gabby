@@ -146,6 +146,36 @@ class Control(Command, Enum):
         return [Control.ETX, Control.CLEAR]
 
 
+@dataclass
+class Packet:
+    is_response: bool
+    data: bytes
+
+
+class Connection:
+    def __init__(self) -> None:
+        self.received: list[bytes] = []
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    def start(self) -> None:
+        self.sock.connect(("192.168.178.25:80", 80))
+
+    def receive(self) -> Packet:
+        received = self.sock.recv(1)[0]
+        is_response = bool(received & 0x80)
+        length = received & 0x7F
+        data = self.sock.recv(length)
+        return Packet(is_response, data)
+
+    def send(self, data: int) -> bytes:
+        self.sock.sendall(data.to_bytes(length=2, byteorder="big"))
+        response = self.receive()
+        while not response.is_response:
+            self.received.append(response.data)
+            response = self.receive()
+        return response.data
+
+
 @dataclass(kw_only=True)
 class Typewriter:
     """High-level interface to the typewriter."""
@@ -158,10 +188,10 @@ class Typewriter:
     _horizontal_position: int = field(default=0, init=False)
     _vertical_position: int = field(default=0, init=False)
     _character_width: int = field(default=12, init=False)
-    _socket: socket.socket = field(default=socket.socket(socket.AF_INET, socket.SOCK_STREAM), init=False)
+    _connection: Connection = field(default=Connection(), init=False)
 
     def __post_init__(self) -> None:
-        self._socket.connect(("192.168.178.25:80", 80))
+        self._connection.start()
 
     @property
     def horizontal_position(self) -> int:
@@ -180,12 +210,10 @@ class Typewriter:
         self._send(SetCharWidth(width))
         self._character_width = width
 
-    def _send(self, data: Command | Iterable[Command]) -> None:
+    def _send(self, data: Command | Iterable[Command]) -> list[bytes]:
         if isinstance(data, Command):
             data = [data]
-        for command in data:
-            self._socket.send(command.encode().to_bytes(length=2, byteorder="big"))
-            self._socket.read()
+        return [self._connection.send(command.encode()) for command in data]
 
     def online(self) -> None:
         self._send(Control.online())
