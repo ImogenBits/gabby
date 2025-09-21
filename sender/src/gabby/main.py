@@ -268,3 +268,12 @@ class Typewriter:
 
     def move_to(self, horizontal: int, vertical: int) -> None:
         self.move_head(horizontal - self._horizontal_position, vertical - self._vertical_position)
+
+
+def main() -> None:
+    with Typewriter() as tp:
+        tp.print_string("Yay!\n")
+
+
+if __name__ == "__main__":
+    main()
