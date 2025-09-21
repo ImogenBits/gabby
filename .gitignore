@@ -1,0 +1,6 @@
+secret.h
+__pycache__/
+
+# Added by cargo
+
+/target

@@ -1,0 +1,8 @@
+
+Gabby           software        arduino     plug
+blue    RxD     green 3         D7          blue
+green   DSR     orange 2        D6          yellow
+black   DTR     red 1           D2          green
+red     TxD     brown 0         D1          white
+
+red yellow blue white green black

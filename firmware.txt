@@ -1,0 +1,856 @@
+
+/* WARNING: Unknown calling convention yet parameter storage is locked */
+
+void _reset(void)
+
+{
+  bool bVar1;
+  byte in_R0;
+  undefined *puVar2;
+  undefined *puVar3;
+  undefined *in_R4;
+  undefined *puVar4;
+  undefined *puVar5;
+  undefined *puVar6;
+  byte bVar7;
+  char cVar8;
+  byte bVar9;
+  undefined uVar10;
+  undefined *puVar11;
+  undefined *puVar12;
+  undefined *puVar13;
+  
+  puVar12 = (undefined *)0x0;
+  write_volatile_1(SP,0x47);
+  write_volatile_1(P2,0x40);
+  *(undefined *)(ushort)in_R0 = 0xff;
+  puVar2 = &DAT_INTMEM_7f;
+  do {
+    *puVar2 = 0;
+    puVar2 = puVar2 + -1;
+  } while (puVar2 != (undefined *)0x0);
+  puVar4 = &BANK1_R4;
+  FUN_CODE_32d9();
+  queue_end = 0x30;
+  DAT_INTMEM_22 = 0xcf;
+  DAT_INTMEM_23 = 0xb7;
+  DAT_INTMEM_27 = 0xff;
+  read_volatile(SBUF);
+  write_volatile_1(P2,0x40);
+  bVar9 = *(byte *)ZEXT12(puVar2) >> 1;
+  bVar7 = (bVar9 | *(byte *)ZEXT12(puVar2) << 7) >> 1;
+  puVar5 = (undefined *)~((bVar7 | bVar9 << 7) >> 1 | bVar7 << 7 | 0xe0);
+  FUN_CODE_3513();
+  write_volatile_1(P2,0xc0);
+  FUN_CODE_0065();
+  init_ram();
+                    /* timer setup */
+  write_volatile_1(TMOD,0x22);
+  write_volatile_1(TH0,0x6d);
+  write_volatile_1(TL0,0x6d);
+  write_volatile_1(TH1,0xfa);
+  write_volatile_1(TL1,0xfa);
+  write_volatile_1(SCON,0x42);
+  read_volatile(SBUF);
+  tim0_handler._1_1_ = 0x20;
+  tim0_handler._0_1_ = 0x24;
+  DAT_INTMEM_46 = &BANK0_R1;
+  DAT_INTMEM_45 = (undefined *)0x82;
+  write_volatile_1(TCON,0x50);
+  write_volatile_1(IE,0x82);
+  FUN_CODE_2e53(2);
+  FUN_CODE_3578();
+  if (BANK1_R2 == '0') goto LAB_CODE_3075;
+  do {
+    puVar12['\x01'] = 0x6f;
+    puVar12['\x02'] = 0x30;
+    thunk_FUN_CODE_0098();
+    DAT_INTMEM_46 = &BANK3_R6;
+    DAT_INTMEM_45 = (undefined *)0x82;
+LAB_CODE_3075:
+    puVar12['\x01'] = 0x77;
+    puVar12['\x02'] = 0x30;
+    thunk_FUN_CODE_0098();
+    DAT_INTMEM_25 &= 0xb1;
+    puVar12['\x01'] = 0x7c;
+    puVar12['\x02'] = 0x30;
+    FUN_CODE_349d();
+    22.0 = '\x01';
+    DAT_INTMEM_45 = (undefined *)0x80;
+    DAT_INTMEM_46 = puVar4;
+    puVar12['\x01'] = 0x85;
+    puVar12['\x02'] = 0x30;
+    thunk_FUN_CODE_0098();
+    DAT_INTMEM_46 = DAT_INTMEM_31;
+    BANK0_R7 = DAT_INTMEM_31;
+    BANK0_R6 = DAT_INTMEM_30;
+    DAT_INTMEM_45 = (undefined *)(DAT_INTMEM_30 | 0xc0);
+    puVar12['\x01'] = 0x96;
+    puVar12['\x02'] = 0x30;
+    puVar6 = (undefined *)FUN_CODE_01fa();
+    DAT_INTMEM_20 = 0x10;
+    23.2 = 0;
+    queue_end = 0x30;
+FUN_CODE_3a55_loop:
+    if (26.3 != '\0') {
+      26.3 = '\0';
+      puVar6 = DAT_EXTMEM_c77b;
+      if (((byte)DAT_EXTMEM_c77b & 1) != 0) {
+        puVar12['\x01'] = 1;
+        puVar12['\x02'] = 0x31;
+        thunk_FUN_CODE_0098();
+        DAT_INTMEM_3e = (undefined *)0x0;
+        DAT_INTMEM_46 = (undefined *)0x0;
+        DAT_INTMEM_45 = (undefined *)0xc0;
+        puVar3 = puVar2;
+        do {
+          puVar12['\x01'] = 0xb;
+          puVar12['\x02'] = 0x31;
+          thunk_FUN_CODE_0098();
+          puVar12['\x01'] = 0xd;
+          puVar12['\x02'] = 0x31;
+          puVar6 = (undefined *)queue_pop_front?();
+          puVar2 = puVar3;
+          if (puVar6 != (undefined *)0x0) {
+            puVar6 = (undefined *)((byte)puVar6 & 0xbf);
+            bVar9 = (puVar6 < (undefined *)0x9a) << 7;
+            if (puVar6 != (undefined *)0x9a) goto LAB_CODE_30ea;
+            break;
+          }
+          DAT_INTMEM_3e = DAT_INTMEM_3e + -1;
+        } while (DAT_INTMEM_3e != (undefined *)0x0);
+      }
+      goto FUN_CODE_3a55_loop;
+    }
+    puVar12['\x01'] = 0xa3;
+    puVar12['\x02'] = 0x30;
+    thunk_FUN_CODE_0098(puVar6);
+    puVar12['\x01'] = 0xa6;
+    puVar12['\x02'] = 0x30;
+    bVar7 = uart_rx2();
+    if (bVar7 == 0xa9) {
+      23.3 = 1;
+      offline? = false;
+      DAT_INTMEM_3e = (undefined *)0xff;
+      puVar12['\x01'] = 0xb6;
+      puVar12['\x02'] = 0x30;
+      uart_tx(0xa9);
+      puVar12['\x01'] = 0xb9;
+      puVar12['\x02'] = 0x30;
+      process_online();
+      23.3 = 0;
+      goto LAB_CODE_30c6;
+    }
+    if (bVar7 != 0xa1) {
+      bVar9 = (bVar7 < 0xa0) << 7;
+      if (bVar7 == 0xa0) {
+        puVar12['\x01'] = 0xd0;
+        puVar12['\x02'] = 0x30;
+        FUN_CODE_2e53();
+        do {
+          write_volatile_1(P2,0x80);
+          puVar2 = &DAT_INTMEM_38;
+        } while (-1 < DAT_EXTMEM_0038);
+        puVar12['\x01'] = 0xdc;
+        puVar12['\x02'] = 0x30;
+        uart_thing1();
+      }
+      puVar12['\x01'] = 0xde;
+      puVar12['\x02'] = 0x30;
+      puVar3 = (undefined *)queue_pop_front?();
+      puVar6 = puVar3;
+      if (puVar3 != (undefined *)0x0) {
+        bVar9 &= 0xdd;
+        if ((DAT_INTMEM_25 & 0xe) == 0) {
+LAB_CODE_30ea:
+          if ((char)puVar3 < '\0') {
+            puVar12['\x01'] =
+                 *(undefined *)
+                  ((ushort)(((byte)puVar3 & 0x1f) * '\x02' + 0xd) + 0x19);
+            puVar12['\x02'] = BANK0_R1;
+            20.6 = 0;
+            25.7 = 0;
+            return;
+          }
+          25.7 = '\0';
+          DAT_INTMEM_3e = puVar3;
+          puVar12['\x01'] = 0x1a;
+          puVar12['\x02'] = 0x31;
+          puVar6 = (undefined *)thunk_FUN_CODE_047a();
+          if (puVar6 == (undefined *)0x0) {
+            puVar2 = puVar3;
+            if (20.0 == '\0') {
+              if (20.6 == '\0') goto LAB_CODE_3126;
+              DAT_INTMEM_46 = (undefined *)0x5;
+              DAT_INTMEM_45 = (undefined *)0x81;
+              do {
+                puVar12['\x01'] = 0x9b;
+                puVar12['\x02'] = 0x32;
+                FUN_CODE_3571();
+              } while (DAT_INTMEM_45 != (undefined *)0x0);
+              puVar12['\x01'] = 0xa1;
+              puVar12['\x02'] = 0x32;
+              puVar6 = (undefined *)FUN_CODE_341d();
+              BANK2_R6 = (undefined *)((byte)BANK2_R6 & 0x7f);
+              DAT_INTMEM_45 = BANK2_R5;
+              20.6 = '\0';
+              puVar2 = puVar3;
+              DAT_INTMEM_46 = BANK2_R6;
+            }
+            else {
+LAB_CODE_3283:
+              DAT_INTMEM_44 |= 0x5a;
+              queue_value = 0;
+            }
+            goto FUN_CODE_3a55_loop;
+          }
+LAB_CODE_3126:
+          F0 = '\0';
+          puVar12['\x01'] = 0x2a;
+          puVar12['\x02'] = 0x31;
+          FUN_CODE_33b3();
+          puVar12['\x01'] = 0x2d;
+          puVar12['\x02'] = 0x31;
+          cVar8 = FUN_CODE_015e();
+          if (cVar8 == '\0') {
+            while (DAT_INTMEM_3e != (undefined *)0x0) {
+              puVar12['\x01'] = 0x3a;
+              puVar12['\x02'] = 0x31;
+              cVar8 = thunk_FUN_CODE_047a();
+              if (cVar8 == '\0') {
+                puVar12['\x01'] = 0x3e;
+                puVar12['\x02'] = 0x31;
+                FUN_CODE_341d();
+                if ((char)BANK2_R6 < '\0') goto LAB_CODE_31f1;
+                goto LAB_CODE_3200;
+              }
+              puVar12['\x01'] = 0x42;
+              puVar12['\x02'] = 0x31;
+              thunk_FUN_CODE_034f();
+              if ((char)puVar5 < '\0') {
+                cVar8 = -1;
+                if (puVar5 == (undefined *)0x80) {
+                  cVar8 = '\0';
+                }
+                if (puVar5 == (undefined *)0xd0) {
+                  cVar8 = '\0';
+                }
+                if (puVar5 == (undefined *)0xf0) {
+                  cVar8 = '\0';
+                }
+                bVar9 = (puVar5 < (undefined *)0x84) << 7;
+                if (puVar5 == (undefined *)0x84) {
+                  cVar8 = '\0';
+                  DAT_INTMEM_3e = (undefined *)0x0;
+                }
+                if (cVar8 != '\0') goto LAB_CODE_3176;
+                if (20.3 == '\0') goto LAB_CODE_314a;
+                puVar12['\x01'] = 0x6a;
+                puVar12['\x02'] = 0x31;
+                FUN_CODE_062c();
+                puVar12['\x01'] = 0x6c;
+                puVar12['\x02'] = 0x31;
+                thunk_FUN_CODE_0098();
+              }
+              else {
+                if ((char)in_R4 < '\0') {
+LAB_CODE_3176:
+                  puVar12['\x01'] = 0x78;
+                  puVar12['\x02'] = 0x31;
+                  FUN_CODE_341d();
+                  if ((char)BANK2_R6 < '\0') {
+                    if (puVar5 == (undefined *)0x0) {
+LAB_CODE_31f1:
+                      if ((22.7 != '\x01') && (BANK2_R5 != &DAT_INTMEM_33)) {
+                        DAT_INTMEM_3e = (undefined *)0xff;
+LAB_CODE_31fd:
+                        BANK2_R6 = (undefined *)((byte)BANK2_R6 | 0x40);
+                      }
+                      goto LAB_CODE_3200;
+                    }
+                    if (puVar5 == (undefined *)0x83) goto LAB_CODE_3200;
+                    puVar12['\x01'] = 0x90;
+                    puVar12['\x02'] = 0x31;
+                    cVar8 = FUN_CODE_0485();
+                    if (cVar8 == '\0') {
+                      puVar12['\x01'] = 0x95;
+                      puVar12['\x02'] = 0x31;
+                      cVar8 = FUN_CODE_048b();
+                      if ((char)bVar9 < '\0') {
+                        BANK2_R6 = (undefined *)((byte)BANK2_R6 & 0x7f);
+                        F0 = '\x01';
+                      }
+                      else {
+                        if (cVar8 == '\0') {
+                          puVar12['\x01'] = 0xa2;
+                          puVar12['\x02'] = 0x31;
+                          cVar8 = FUN_CODE_328b();
+                          if (cVar8 != '\0') {
+                            puVar12['\x01'] = 0xa7;
+                            puVar12['\x02'] = 0x31;
+                            FUN_CODE_0356();
+                            if ((puVar5 == (undefined *)0xc0) &&
+                               (in_R4 == (undefined *)0x0)) {
+                              puVar12['\x01'] = 0xaf;
+                              puVar12['\x02'] = 0x31;
+                              thunk_FUN_CODE_0381();
+                              puVar12['\x01'] = 0xb2;
+                              puVar12['\x02'] = 0x31;
+                              FUN_CODE_02b3();
+                            }
+                          }
+                          goto LAB_CODE_31f1;
+                        }
+                        puVar12['\x01'] = 0xb6;
+                        puVar12['\x02'] = 0x31;
+                        thunk_FUN_CODE_0372();
+                      }
+LAB_CODE_31b6:
+                      puVar12['\x01'] = 0xb8;
+                      puVar12['\x02'] = 0x31;
+                      cVar8 = FUN_CODE_328b();
+                      if (cVar8 != '\0') {
+                        puVar12['\x01'] = 0xbc;
+                        puVar12['\x02'] = 0x31;
+                        thunk_FUN_CODE_0381();
+                        puVar12['\x01'] = 0xbe;
+                        puVar12['\x02'] = 0x31;
+                        thunk_FUN_CODE_034f();
+                        if ((puVar5 == (undefined *)0xc0) &&
+                           (in_R4 == (undefined *)0x0)) goto LAB_CODE_31f1;
+                        puVar12['\x01'] = 0xc6;
+                        puVar12['\x02'] = 0x31;
+                        thunk_FUN_CODE_03b2();
+                      }
+                      puVar12['\x01'] = 200;
+                      puVar12['\x02'] = 0x31;
+                      thunk_FUN_CODE_0261();
+                      goto LAB_CODE_31f1;
+                    }
+                    if (puVar5 == &DAT_INTMEM_33) {
+                      if (BANK2_R5 == &DAT_INTMEM_33) goto LAB_CODE_3200;
+                      goto LAB_CODE_31fd;
+                    }
+                    if (BANK2_R5 == &DAT_INTMEM_33) {
+                      BANK0_R4 |= 0x40;
+                      goto LAB_CODE_3208;
+                    }
+                    puVar12['\x01'] = 0xde;
+                    puVar12['\x02'] = 0x31;
+                    thunk_FUN_CODE_0261();
+                    puVar5 = BANK2_R5;
+                    in_R4 = (undefined *)((byte)BANK2_R6 & 0x7f);
+                    puVar12['\x01'] = 0xe8;
+                    puVar12['\x02'] = 0x31;
+                    FUN_CODE_0302();
+                    puVar12['\x01'] = 0xea;
+                    puVar12['\x02'] = 0x31;
+                    thunk_FUN_CODE_03b2();
+                  }
+                  else {
+                    puVar12['\x01'] = 0x80;
+                    puVar12['\x02'] = 0x31;
+                    cVar8 = FUN_CODE_0485();
+                    if (cVar8 == '\0') goto LAB_CODE_31b6;
+                    puVar12['\x01'] = 0x84;
+                    puVar12['\x02'] = 0x31;
+                    thunk_FUN_CODE_0261();
+LAB_CODE_3200:
+                    puVar5 = BANK2_R5;
+                    in_R4 = BANK2_R6;
+                    BANK2_R6 = (undefined *)((byte)BANK2_R6 & 0xbf);
+LAB_CODE_3208:
+                    puVar12['\x01'] = 0xb;
+                    puVar12['\x02'] = 0x32;
+                    FUN_CODE_0302();
+                  }
+                  20.3 = '\0';
+                  goto LAB_CODE_320d;
+                }
+LAB_CODE_314a:
+                puVar12['\x01'] = 0x4c;
+                puVar12['\x02'] = 0x31;
+                thunk_FUN_CODE_03b2();
+              }
+              20.3 = '\0';
+              puVar12['\x01'] = 0x70;
+              puVar12['\x02'] = 0x31;
+              cVar8 = thunk_FUN_CODE_047a();
+              if (cVar8 != '\0') {
+                puVar12['\x01'] = 0x74;
+                puVar12['\x02'] = 0x31;
+                thunk_FUN_CODE_04b6();
+              }
+            }
+          }
+          BANK2_R5 = (undefined *)0x0;
+LAB_CODE_320d:
+          puVar2 = puVar3;
+          puVar6 = BANK2_R5;
+          if (BANK2_R5 == (undefined *)0x0) goto LAB_CODE_3283;
+          if (DAT_INTMEM_3e == (undefined *)0xff) {
+            puVar12['\x01'] = BANK2_R5;
+            puVar12['\x02'] = BANK2_R6;
+            puVar2 = &DAT_INTMEM_33;
+            puVar12['\x03'] = 0x20;
+            puVar12['\x04'] = 0x32;
+            bVar9 = FUN_CODE_3427();
+            DAT_INTMEM_46 = (undefined *)(bVar9 & 0x7f);
+            DAT_INTMEM_45 = (undefined *)0x33;
+            puVar12['\x03'] = 0x29;
+            puVar12['\x04'] = 0x32;
+            thunk_FUN_CODE_0098();
+            BANK2_R6 = (undefined *)puVar12['\x02'];
+            BANK2_R5 = (undefined *)puVar12['\x01'];
+          }
+          DAT_INTMEM_46 = BANK2_R6;
+          DAT_INTMEM_45 = BANK2_R5;
+          if ((char)BANK2_R6 < '\0') {
+            puVar12['\x01'] = 0x3b;
+            puVar12['\x02'] = 0x32;
+            FUN_CODE_0084();
+          }
+          puVar12['\x01'] = 0x3d;
+          puVar12['\x02'] = 0x32;
+          cVar8 = thunk_FUN_CODE_047a();
+          if (cVar8 == '\0') {
+            if (((22.0 == '\x01') || (20.2 == '\0')) ||
+               (bVar9 = (BANK2_R5 < &BANK0_R3) << 7, BANK2_R5 != &BANK0_R3))
+            goto LAB_CODE_3275;
+            puVar12['\x01'] = 0x6f;
+            puVar12['\x02'] = 0x32;
+            FUN_CODE_00ac();
+            puVar12['\x01'] = 0x71;
+            puVar12['\x02'] = 0x32;
+            thunk_FUN_CODE_0098();
+            puVar3 = (undefined *)0x9d;
+            goto LAB_CODE_30ea;
+          }
+          if ((F0 == '\x01') || ((char)BANK2_R6 < '\0')) {
+            puVar12['\x01'] = 0x49;
+            puVar12['\x02'] = 0x32;
+            thunk_FUN_CODE_034f();
+            cVar8 = (puVar5 < (undefined *)0xc0) << 7;
+            if (puVar5 == (undefined *)0xc0) {
+              puVar12['\x01'] = 0x4f;
+              puVar12['\x02'] = 0x32;
+              FUN_CODE_048b();
+              if (cVar8 < '\0') {
+                puVar12['\x01'] = 0x53;
+                puVar12['\x02'] = 0x32;
+                thunk_FUN_CODE_0098();
+                puVar12['\x01'] = 0x55;
+                puVar12['\x02'] = 0x32;
+                thunk_FUN_CODE_034f();
+                DAT_INTMEM_45 = puVar5;
+                DAT_INTMEM_46 = in_R4;
+                puVar12['\x01'] = 0x5d;
+                puVar12['\x02'] = 0x32;
+                FUN_CODE_0085(in_R4);
+                puVar12['\x01'] = 0x5f;
+                puVar12['\x02'] = 0x32;
+                thunk_FUN_CODE_03b2();
+              }
+            }
+          }
+LAB_CODE_3275:
+          puVar12['\x01'] = 0x77;
+          puVar12['\x02'] = 0x32;
+          cVar8 = thunk_FUN_CODE_047a();
+          if (cVar8 != '\0') {
+            puVar12['\x01'] = 0x7b;
+            puVar12['\x02'] = 0x32;
+            thunk_FUN_CODE_04b6();
+            DAT_INTMEM_20 |= 6;
+          }
+          puVar12['\x01'] = 0x81;
+          puVar12['\x02'] = 0x32;
+          puVar6 = (undefined *)FUN_CODE_00ae();
+        }
+        else {
+          BANK2_R7 = puVar3;
+          if ((char)puVar3 < '\0') {
+            if (puVar3 != (undefined *)0xcc) {
+              BANK2_R7 = (undefined *)((byte)puVar3 & 0xbf);
+            }
+            bVar9 = (BANK2_R7 < (undefined *)0x9a) << 7;
+            if (BANK2_R7 != (undefined *)0x9a) {
+              bVar7 = 0xf;
+LAB_CODE_3907:
+              puVar6 = *(undefined **)((ushort)(bVar7 + 0x2a) + 0x390b);
+              puVar2 = puVar3;
+              if (puVar6 != BANK2_R7) break;
+              if (bVar7 == 0xf) {
+                BANK2_R5 = (undefined *)0x0;
+                BANK2_R6 = (undefined *)0x0;
+                F0 = '\0';
+                while( true ) {
+                  puVar12['\x01'] = 0x4e;
+                  puVar12['\x02'] = 0x39;
+                  thunk_FUN_CODE_0381();
+                  bVar9 = (DAT_INTMEM_3a < DAT_INTMEM_36) << 7;
+                  if ((DAT_INTMEM_3a == DAT_INTMEM_36) &&
+                     (DAT_INTMEM_3b == DAT_INTMEM_37)) break;
+                  F0 = '\x01';
+                  puVar12['\x01'] = 0x5d;
+                  puVar12['\x02'] = 0x39;
+                  thunk_FUN_CODE_034f();
+                  puVar2 = (undefined *)((byte)puVar5 ^ 0x83);
+                  if (((undefined *)((byte)puVar5 ^ 0x83) == (undefined *)0x0)
+                     || (puVar2 = in_R4, (char)in_R4 < '\0')) {
+                    if ((25.2 != '\0') && (23.5 != '\x01')) {
+                      puVar4 = &some_other_status;
+                    }
+                    bVar1 = CARRY1((byte)BANK2_R6,(byte)puVar4);
+                    BANK2_R6 = BANK2_R6 + (char)puVar4;
+                    if (bVar1 << 7 < '\0') {
+                      BANK2_R5 = BANK2_R5 + '\x01';
+                    }
+                  }
+                  in_R4 = (undefined *)0x80;
+                  puVar5 = (undefined *)0x0;
+                  puVar12['\x01'] = 0x7d;
+                  puVar12['\x02'] = 0x39;
+                  thunk_FUN_CODE_0302(puVar2);
+                  puVar12['\x01'] = 0x7f;
+                  puVar12['\x02'] = 0x39;
+                  thunk_FUN_CODE_0381();
+                }
+                if (F0 == '\0') {
+                  puVar12['\x01'] = 0x86;
+                  puVar12['\x02'] = 0x39;
+                  FUN_CODE_3b65();
+                  puVar12['\x01'] = 0x88;
+                  puVar12['\x02'] = 0x39;
+                  FUN_CODE_3b7f();
+                  puVar12['\x01'] = 0x8a;
+                  puVar12['\x02'] = 0x39;
+                  thunk_FUN_CODE_03b2();
+                  goto LAB_CODE_39ed;
+                }
+                F0 = '\0';
+                DAT_INTMEM_35 = DAT_INTMEM_47;
+                if (26.7 == '\0') {
+                  puVar12['\x01'] = 0x94;
+                  puVar12['\x02'] = 0x39;
+                  puVar6 = (undefined *)thunk_FUN_CODE_03b2();
+                }
+                else {
+                  26.7 = '\0';
+                  if ((((byte)BANK2_R6 & 1) != 0) &&
+                     (BANK2_R6 = BANK2_R6 + '\x01', BANK2_R6 == (undefined *)0x0
+                     )) {
+                    BANK2_R5 = BANK2_R5 + '\x01';
+                  }
+                  puVar12['\x01'] = 0xa4;
+                  puVar12['\x02'] = 0x39;
+                  thunk_FUN_CODE_03b2();
+                  puVar12['\x01'] = 0xa6;
+                  puVar12['\x02'] = 0x39;
+                  FUN_CODE_3b5e();
+                  in_R4 = BANK2_R6;
+                  puVar5 = BANK2_R5;
+                  BANK0_R3 |= 0xc0;
+                  puVar12['\x01'] = 0xaf;
+                  puVar12['\x02'] = 0x39;
+                  uVar10 = thunk_FUN_CODE_0302();
+                  puVar12['\x01'] = 0xb9;
+                  puVar12['\x02'] = 0x39;
+                  thunk_FUN_CODE_00ac(uVar10);
+                  DAT_INTMEM_46 = BANK2_R6;
+                  puVar6 = (undefined *)((byte)BANK2_R5 | 0xc0);
+                  DAT_INTMEM_45 = puVar6;
+                }
+                DAT_INTMEM_3c = DAT_INTMEM_3a;
+                DAT_INTMEM_3d = DAT_INTMEM_3b;
+                puVar2 = puVar3;
+                if (25.2 != '\0') {
+                  puVar12['\x01'] = 0xcd;
+                  puVar12['\x02'] = 0x39;
+                  puVar6 = (undefined *)FUN_CODE_3b59();
+                  puVar2 = puVar3;
+                  if (23.5 != '\x01') {
+                    puVar4 = &BANK0_R4;
+                  }
+                }
+              }
+              else {
+                if (-1 < (bVar7 < 0xd) << 7) {
+                  puVar12['\x01'] = 0xdc;
+                  puVar12['\x02'] = 0x3a;
+                  puVar6 = (undefined *)thunk_FUN_CODE_015e();
+                  if (puVar6 != (undefined *)0x0) goto LAB_CODE_3ad5;
+                  if (bVar7 == 0xe) {
+                    puVar6 = (undefined *)(DAT_INTMEM_35 + '\x01');
+                    if ((undefined *)(DAT_INTMEM_35 + '\x01') ==
+                        (undefined *)0x0) goto LAB_CODE_3ad5;
+                    DAT_INTMEM_35 += -1;
+                    BANK2_R5 = (undefined *)0xd0;
+                  }
+                  else {
+                    puVar6 = (undefined *)(DAT_INTMEM_35 + -1);
+                    if ((undefined *)(DAT_INTMEM_35 + -1) == (undefined *)0x0)
+                    goto LAB_CODE_3ad5;
+                    DAT_INTMEM_35 += '\x01';
+                    BANK2_R5 = (undefined *)0xf0;
+                  }
+                  BANK2_R6 = &queue_end;
+                  puVar2 = puVar3;
+                  goto LAB_CODE_3ac1;
+                }
+                bVar9 = (bVar7 < 9) << 7;
+                if (-1 < (char)bVar9) goto LAB_CODE_39ed;
+                if (25.7 != '\x01') {
+                  puVar12['\x01'] = 0x24;
+                  puVar12['\x02'] = 0x39;
+                  FUN_CODE_3b65();
+                  puVar12['\x01'] = 0x26;
+                  puVar12['\x02'] = 0x39;
+                  puVar6 = (undefined *)FUN_CODE_3afc();
+                  bVar9 = (bVar7 < 3) << 7;
+                  if ((bVar7 == 3) && (25.3 != '\0')) {
+                    25.3 = '\0';
+                    puVar2 = puVar3;
+                  }
+                  else {
+                    puVar12['\x01'] = 0x2e;
+                    puVar12['\x02'] = 0x39;
+                    puVar6 = (undefined *)FUN_CODE_3b7f();
+                    puVar2 = puVar3;
+                    if (-1 < (char)bVar9) goto LAB_CODE_39ed;
+                  }
+                }
+              }
+              goto FUN_CODE_3a55_loop;
+            }
+            puVar12['\x01'] = 0xfa;
+            puVar12['\x02'] = 0x38;
+            puVar6 = (undefined *)thunk_FUN_CODE_015e();
+            if (puVar6 == (undefined *)0x0) {
+              BANK2_R5 = (undefined *)0x83;
+              BANK2_R6 = puVar6;
+LAB_CODE_39fc:
+              puVar6 = BANK2_R6;
+              if (20.4 != '\x01') {
+                if (25.2 != '\0') {
+                  bVar9 = -((CARRY1(DAT_INTMEM_3f,(byte)puVar4) << 7) >> 7);
+                  puVar3 = DAT_INTMEM_3e + bVar9;
+                  puVar2 = (undefined *)
+                           ('\x05' - (((puVar4 + DAT_INTMEM_3f <
+                                       (undefined *)
+                                       ('\x1f' - ((CARRY1((byte)DAT_INTMEM_3e,
+                                                          bVar9) << 7) >> 7)))
+                                      << 7) >> 7));
+                  bVar9 = (puVar3 < puVar2) << 7;
+                  puVar6 = puVar3 + -(char)puVar2;
+                  if (-1 < (char)bVar9) goto LAB_CODE_3ad5;
+                  puVar12['\x01'] = BANK0_R1;
+                  puVar11 = puVar12 + '\x02';
+                  puVar12 = puVar12 + '\x02';
+                  *puVar11 = BANK0_R0;
+                }
+                puVar2 = puVar4;
+                if ((25.2 != '\0') && (23.5 != '\x01')) {
+                  puVar2 = (undefined *)((byte)puVar4 ^ 2);
+                }
+                BANK2_R7 = puVar4;
+                puVar12['\x01'] = 0x25;
+                puVar12['\x02'] = 0x3a;
+                FUN_CODE_3b92();
+                while( true ) {
+                  puVar12['\x01'] = 0x27;
+                  puVar12['\x02'] = 0x3a;
+                  thunk_FUN_CODE_034f();
+                  if (puVar5 == (undefined *)0x0) break;
+                  puVar12['\x01'] = 0x2c;
+                  puVar12['\x02'] = 0x3a;
+                  cVar8 = thunk_FUN_CODE_0485();
+                  bVar7 = BANK0_R4;
+                  if (cVar8 != '\0') {
+LAB_CODE_3a78:
+                    if (puVar5 != (undefined *)0x83) {
+LAB_CODE_3aca:
+                      puVar12['\x01'] = 0xcc;
+                      puVar12['\x02'] = 0x3a;
+                      puVar6 = (undefined *)FUN_CODE_3b92();
+                      puVar4 = BANK2_R7;
+                      if (25.2 != '\0') {
+                        puVar13 = puVar12 + -1;
+                        puVar12 = puVar12 + -2;
+                        puVar6 = (undefined *)*puVar13;
+                      }
+                      goto LAB_CODE_3ad5;
+                    }
+                    break;
+                  }
+                  puVar12['\x01'] = 0x33;
+                  puVar12['\x02'] = 0x3a;
+                  FUN_CODE_04a1();
+                  if (-1 < (char)bVar9) {
+                    bVar9 = (byte)puVar5 | (byte)in_R4;
+                    puVar4 = puVar2;
+                    if (bVar9 == 0) goto LAB_CODE_3a70;
+                    BANK0_R3 |= 0xc0;
+                    goto LAB_CODE_3a8f;
+                  }
+                  puVar12['\x01'] = 0x37;
+                  puVar12['\x02'] = 0x3a;
+                  cVar8 = thunk_FUN_CODE_014a();
+                  if (cVar8 == '\0') goto LAB_CODE_3aca;
+                  puVar12['\x01'] = 0x3b;
+                  puVar12['\x02'] = 0x3a;
+                  thunk_FUN_CODE_0381();
+                  puVar12['\x01'] = 0x3d;
+                  puVar12['\x02'] = 0x3a;
+                  thunk_FUN_CODE_034f();
+                  puVar12['\x01'] = 0x3f;
+                  puVar12['\x02'] = 0x3a;
+                  cVar8 = FUN_CODE_3bab();
+                  if (cVar8 == '\0') {
+                    puVar12['\x01'] = BANK0_R4;
+                    in_R4 = BANK0_R2;
+                    puVar12['\x02'] = 0x49;
+                    puVar12['\x03'] = 0x3a;
+                    thunk_FUN_CODE_0302(0xc0);
+                    BANK0_R4 = puVar12['\x01'];
+                    puVar5 = (undefined *)0x83;
+                    puVar12['\x01'] = 0x4f;
+                    puVar12['\x02'] = 0x3a;
+                    thunk_FUN_CODE_0302();
+                    puVar12['\x01'] = 0x51;
+                    puVar12['\x02'] = 0x3a;
+                    thunk_FUN_CODE_0381();
+                    goto LAB_CODE_3a78;
+                  }
+                  puVar12['\x01'] = 0x55;
+                  puVar12['\x02'] = 0x3a;
+                  cVar8 = thunk_FUN_CODE_0485();
+                  if (cVar8 != '\0') {
+                    puVar12['\x01'] = 0x59;
+                    puVar12['\x02'] = 0x3a;
+                    thunk_FUN_CODE_03b2();
+                    goto LAB_CODE_3aca;
+                  }
+                  bVar9 = CARRY1((byte)in_R4,bVar7) << 7;
+                  in_R4 = in_R4 + bVar7;
+                  if ((char)bVar9 < '\0') {
+                    puVar5 = puVar5 + '\x01';
+                  }
+                  puVar12['\x01'] = 99;
+                  puVar12['\x02'] = 0x3a;
+                  thunk_FUN_CODE_0302(0);
+                  puVar12['\x01'] = 0x65;
+                  puVar12['\x02'] = 0x3a;
+                  FUN_CODE_3b86();
+                }
+                puVar4 = puVar2;
+                if (25.2 == '\0') {
+LAB_CODE_3a70:
+                  puVar12['\x01'] = 0x72;
+                  puVar12['\x02'] = 0x3a;
+                  bVar9 = thunk_FUN_CODE_014a();
+                  if (bVar9 == 0) goto LAB_CODE_3a8f;
+                  puVar12['\x01'] = 0x76;
+                  puVar12['\x02'] = 0x3a;
+                  FUN_CODE_3b86();
+                }
+                else {
+                  cVar8 = '\b';
+                  if ((23.4 != '\0') && (cVar8 = '\n', 23.5 != '\0')) {
+                    cVar8 = '\f';
+                  }
+                  bVar9 = cVar8 - (char)puVar2;
+LAB_CODE_3a8f:
+                  puVar12['\x01'] = 0x91;
+                  puVar12['\x02'] = 0x3a;
+                  thunk_FUN_CODE_0302(bVar9);
+                  puVar12['\x01'] = 0x93;
+                  puVar12['\x02'] = 0x3a;
+                  thunk_FUN_CODE_0381();
+                }
+                26.7 = '\x01';
+                DAT_INTMEM_45 = (undefined *)0x84;
+                DAT_INTMEM_46 = puVar4;
+                puVar12['\x01'] = 0x9d;
+                puVar12['\x02'] = 0x3a;
+                FUN_CODE_008b();
+                puVar12['\x01'] = 0x9f;
+                puVar12['\x02'] = 0x3a;
+                thunk_FUN_CODE_00ac();
+                if (25.2 != '\0') {
+                  DAT_INTMEM_3e = (undefined *)*puVar12;
+                  DAT_INTMEM_3f = puVar12[-1];
+                  puVar12 = puVar12 + -2;
+                }
+                puVar12['\x01'] = 0xa8;
+                puVar12['\x02'] = 0x3a;
+                FUN_CODE_3b92();
+                puVar2 = puVar3;
+                if ((-1 < 22.7 << 7) &&
+                   (puVar5 = (undefined *)('3' - ((22.7 << 7) >> 7)),
+                   BANK2_R5 != puVar5)) {
+                  if ((char)BANK2_R5 - (char)puVar5 == 'P') {
+                    puVar2 = &DAT_INTMEM_33;
+                    BANK2_R5 = &DAT_INTMEM_33;
+                    puVar12['\x01'] = 0xbc;
+                    puVar12['\x02'] = 0x3a;
+                    FUN_CODE_3427();
+                  }
+                  else {
+                    BANK2_R6 = (undefined *)((byte)BANK2_R6 | 0x40);
+                  }
+                }
+                goto LAB_CODE_3ac1;
+              }
+            }
+LAB_CODE_3ad5:
+            DAT_INTMEM_44 |= 0x5a;
+            puVar2 = puVar3;
+          }
+          else {
+            puVar12['\x01'] = 0xd6;
+            puVar12['\x02'] = 0x39;
+            puVar6 = (undefined *)thunk_FUN_CODE_015e();
+            puVar2 = BANK2_R7;
+            if (puVar6 != (undefined *)0x0) goto LAB_CODE_3ad5;
+            puVar12['\x01'] = 0xdf;
+            puVar12['\x02'] = 0x39;
+            FUN_CODE_341f();
+            if ((25.1 != '\0') &&
+               (bVar9 = (DAT_EXTMEM_c77e < BANK2_R5) << 7,
+               DAT_EXTMEM_c77e == BANK2_R5)) {
+              puVar12['\x01'] = 0xeb;
+              puVar12['\x02'] = 0x39;
+              FUN_CODE_3afc();
+              25.1 = '\0';
+LAB_CODE_39ed:
+              puVar3 = BANK2_R7;
+              puVar12['\x01'] = 0xf2;
+              puVar12['\x02'] = 0x39;
+              FUN_CODE_0098();
+              goto LAB_CODE_30ea;
+            }
+            puVar3 = puVar2;
+            if ((char)BANK2_R6 < '\0') goto LAB_CODE_39fc;
+LAB_CODE_3ac1:
+            in_R4 = BANK2_R6;
+            puVar5 = BANK2_R5;
+            puVar12['\x01'] = 199;
+            puVar12['\x02'] = 0x3a;
+            puVar6 = (undefined *)thunk_FUN_CODE_0302();
+          }
+        }
+      }
+      goto FUN_CODE_3a55_loop;
+    }
+    puVar12['\x01'] = 0xc6;
+    puVar12['\x02'] = 0x30;
+    uart_process3();
+LAB_CODE_30c6:
+    23.0 = 1;
+  } while( true );
+  bVar7 -= 1;
+  if (bVar7 == 0) goto FUN_CODE_3a55_loop;
+  goto LAB_CODE_3907;
+}
+
