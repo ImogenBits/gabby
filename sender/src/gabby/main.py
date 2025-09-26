@@ -314,11 +314,12 @@ def main() -> None:
         key_map: dict[str, int] = {}
         while True:
             pressed = input("Which key is pressed? ")
-            if pressed == "exit":
+            if pressed == "":
                 break
-            keys = tp.get_keys()
-            print(f"{pressed}: {keys:032b}")
-        formatted = "\n".join(f"{key: >6} {bits: >2} {bits:032b}" for key, bits in key_map.items())
+            bits = tp.get_keys()
+            key_map[pressed] = bits
+            print(f"{pressed}: {bits:032b}")
+        formatted = "\n".join(f"{key: >6} {bits: >8x} {bits:032b}" for key, bits in key_map.items())
         print(formatted)
         Path().joinpath("keys.txt").write_text(formatted)
 
