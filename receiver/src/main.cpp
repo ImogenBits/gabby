@@ -20,8 +20,8 @@ const byte from_gabby = D2;
 const byte led = D4;
 
 // keyboard
-constexpr uint8_t keyboardSelect[5] = {1, 3, 14, 15, 16};
-constexpr uint8_t keyboardIn = 0;
+constexpr uint8_t keyboardSelect[5] = {0, 1, 3, 15, 16};
+constexpr uint8_t keyboardIn = 14;
 
 WiFiServer server(80);
 SoftwareSerial gabby_serial(rxPin, txPin, true);
