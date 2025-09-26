@@ -7,8 +7,6 @@
 #define wait_for(c) while(!(c)) yield();
 
 void blink(void);
-void handle_not_found(void);
-void handle_command(void);
 
 // serial connection
 const byte txPin = D7;
@@ -19,52 +17,69 @@ const byte to_gabby = D6;
 const byte from_gabby = D2;
 
 // status LED
-const byte led = D3;
+const byte led = D4;
+
+// keyboard
+constexpr uint8_t keyboardSelect[5] = {1, 3, 14, 15, 16};
+constexpr uint8_t keyboardIn = 0;
 
 WiFiServer server(80);
 SoftwareSerial gabby_serial(rxPin, txPin, true);
 
 void setup() {
-    // serial connection
     pinMode(rxPin, INPUT);
     pinMode(txPin, OUTPUT);
-
-    // control signals
     pinMode(to_gabby, OUTPUT);
     digitalWrite(to_gabby, HIGH);
     pinMode(from_gabby, INPUT);
-
-    // LED
     pinMode(led, OUTPUT);
-    digitalWrite(led, LOW);
+    digitalWrite(led, HIGH);
+    for (uint8_t pin : keyboardSelect) {
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, LOW);
+    }
+    pinMode(keyboardIn, INPUT);
 
     blink();
-
-    Serial.begin(115200);
+    
+    blink();
     gabby_serial.begin(4800);
-
     WiFi.begin(WIFI_NAME, WIFI_PW);
-    Serial.println("");
-    Serial.print("Connecting");
     blink();
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
-        Serial.print(".");
     }
-    Serial.println();
-    Serial.print("Connected, IP address: ");
-    Serial.println(WiFi.localIP());
-
     server.begin();
-
     blink();
 }
 
+
+uint32_t scanKeys() {
+    uint32_t data = 0;
+    for (uint8_t keyboardWire = 0; keyboardWire < 32; keyboardWire++) {
+        for (uint8_t pin = 0; pin < 5; pin++) {
+            digitalWrite(keyboardSelect[pin], !!(keyboardWire & (1 << pin)));
+        }
+        data |= digitalRead(keyboardIn) << keyboardWire;
+    }
+    return data;
+}
+
+
 void loop() {
-    WiFiClient client = server.available();
+    WiFiClient client = server.accept();
+    unsigned long time = 0;
     if (client) {
         blink();
         while (client.connected()) {
+            if (millis() >= time + 500) {
+                time = millis();
+                client.write(0x02);
+                uint32_t data = scanKeys();
+                for (int8_t offset = 24; offset >= 0; offset -= 8) {
+                    client.write(0xFF & (data >> offset));
+                }
+            }
             if (gabby_serial.available()) {
                 byte data = gabby_serial.read();
                 client.write(0x01);
@@ -108,8 +123,8 @@ void loop() {
 
 //* util
 void blink(void) {
-    digitalWrite(led, HIGH);
-    delay(250);
     digitalWrite(led, LOW);
+    delay(250);
+    digitalWrite(led, HIGH);
     delay(250);
 }

@@ -4,8 +4,8 @@ import socket
 from abc import abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import ClassVar, Final, Literal, Self
+from enum import Enum, IntEnum
+from typing import ClassVar, Final, Literal, Self, overload
 
 
 class Direction(Enum):
@@ -146,32 +146,61 @@ class Control(Command, Enum):
         return [Control.ETX, Control.CLEAR]
 
 
+class DataType(IntEnum):
+    response = 0x00
+    misc = 0x01
+    keyboard = 0x02
+
+    @classmethod
+    def parse(cls, value: int) -> tuple[DataType, int]:
+        if value & 0x80:
+            return DataType.response, value & 0x7F
+        for member in DataType:
+            if value & member.value:
+                return member, DATA_LENGTH[member]
+        raise RuntimeError
+
+
+DATA_LENGTH = {
+    DataType.misc: 1,
+    DataType.keyboard: 4,
+}
+
+
 @dataclass
 class Packet:
-    is_response: bool
+    type: DataType
     data: bytes
 
 
 class Connection:
     def __init__(self) -> None:
-        self.received: list[bytes] = []
+        self.received: list[Packet] = []
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def start(self) -> None:
         self.sock.connect(("192.168.178.25", 80))
 
-    def receive(self) -> Packet:
-        received = self.sock.recv(1)[0]
-        is_response = bool(received & 0x80)
-        length = received & 0x7F
+    @overload
+    def receive(self, *, blocking: Literal[True] = True) -> Packet: ...
+    @overload
+    def receive(self, *, blocking: Literal[False]) -> Packet | None: ...
+
+    def receive(self, *, blocking: bool = True) -> Packet | None:
+        self.sock.setblocking(blocking)
+        try:
+            received = self.sock.recv(1)[0]
+        except OSError:
+            return None
+        data_type, length = DataType.parse(received)
         data = self.sock.recv(length)
-        return Packet(is_response, data)
+        return Packet(data_type, data)
 
     def send(self, data: int) -> bytes:
         self.sock.sendall(data.to_bytes(length=2, byteorder="big"))
         response = self.receive()
-        while not response.is_response:
-            self.received.append(response.data)
+        while response.type is not DataType.response:
+            self.received.append(response)
             response = self.receive()
         return response.data
 
@@ -269,10 +298,24 @@ class Typewriter:
     def move_to(self, horizontal: int, vertical: int) -> None:
         self.move_head(horizontal - self._horizontal_position, vertical - self._vertical_position)
 
+    def get_keys(self) -> int:
+        packet = None
+        while packet is None:
+            packet = self._connection.receive(blocking=True)
+            if packet.type is not DataType.keyboard:
+                packet = None
+        return int.from_bytes(packet.data, "big")
+
 
 def main() -> None:
-    with Typewriter() as tp:
-        tp.print_string("Yay!\n")
+    tp = Typewriter()
+    print("yay")
+    with tp:
+        print("yay")
+        while True:
+            keys = tp.get_keys()
+            print(f"keys: {keys:032b}")
+
 
 
 if __name__ == "__main__":

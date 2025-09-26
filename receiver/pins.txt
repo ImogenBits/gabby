@@ -9,5 +9,5 @@ red yellow blue white green black
 
 
 Keyboard (GPIO):
-data in     2
+data in     0
 select      1 3 16 14 15

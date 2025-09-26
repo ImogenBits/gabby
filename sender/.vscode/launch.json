@@ -6,9 +6,9 @@
     "configurations": [
         {
             "name": "main",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}\\main.py",
+            "program": "${workspaceFolder}\\src\\gabby\\main.py",
             "console": "integratedTerminal"
         }
     ]
