@@ -65,56 +65,65 @@ uint32_t scanKeys() {
     return data;
 }
 
+void send_command(uint8_t first, uint8_t second, uint8_t response[]) {
+    gabby_serial.write(first);
+    wait_for(digitalRead(from_gabby) == LOW);
+    wait_for(digitalRead(from_gabby) == HIGH);
+    gabby_serial.write(second);
+    wait_for(digitalRead(from_gabby) == LOW);
+    wait_for(digitalRead(from_gabby) == HIGH);
+    byte i = 0;
+    if ((first & 0xF0) == 0xA0) {
+        wait_for(gabby_serial.available());
+        response[1] = gabby_serial.read();
+        i++;
+        if (response[1] == 0xA4) {
+            delayMicroseconds(2300);
+            while (gabby_serial.available()) {
+                response[i + 1] = gabby_serial.read();
+                i++;
+                delayMicroseconds(2300);
+            }
+        }
+        digitalWrite(to_gabby, LOW);
+        delay(1);
+        digitalWrite(to_gabby, HIGH);
+    }
+    response[0] = i | 0x80;
+}
 
 void loop() {
     WiFiClient client = server.accept();
-    unsigned long time = 0;
     if (client) {
         blink();
         while (client.connected()) {
-            if (millis() >= time + 500) {
-                time = millis();
-                client.write(0x02);
-                uint32_t data = scanKeys();
-                for (int8_t offset = 24; offset >= 0; offset -= 8) {
-                    client.write(0xFF & (data >> offset));
-                }
-            }
             if (gabby_serial.available()) {
                 byte data = gabby_serial.read();
                 client.write(0x01);
                 client.write(data);
             }
             if (client.available()) {
-                byte first = client.read();
-                byte second = client.read();
-                gabby_serial.write(first);
-                wait_for(digitalRead(from_gabby) == LOW);
-                wait_for(digitalRead(from_gabby) == HIGH);
-                gabby_serial.write(second);
-                wait_for(digitalRead(from_gabby) == LOW);
-                wait_for(digitalRead(from_gabby) == HIGH);
-                byte buf[128];
-                byte i = 0;
-                if ((first & 0xF0) == 0xA0) {
-                    wait_for(gabby_serial.available());
-                    buf[0] = gabby_serial.read();
-                    i++;
-                    if (buf[0] == 0xA4) {
-                        delayMicroseconds(2300);
-                        while (gabby_serial.available()) {
-                            buf[i] = gabby_serial.read();
-                            i++;
-                            delayMicroseconds(2300);
+                uint8_t instruction = client.read();
+                switch (instruction) {
+                    case 1: {
+                        uint8_t first = client.read();
+                        uint8_t second = client.read();
+                        uint8_t response[128];
+                        send_command(first, second, response);
+                        uint8_t length = (response[0] & 0x7F) + 1;
+                        for (uint8_t i = 0; i < length; i++) {
+                            client.write(response[i]);
                         }
+                        break;
                     }
-                    digitalWrite(to_gabby, LOW);
-                    delay(1);
-                    digitalWrite(to_gabby, HIGH);
-                }
-                client.write(i | 0x80);
-                for (byte j = 0; j < i; j++) {
-                    client.write(buf[j]);
+                    case 2: {
+                        uint32_t data = scanKeys();
+                        client.write(0x02);
+                        for (int8_t offset = 24; offset >= 0; offset -= 8) {
+                            client.write(0xFF & (data >> offset));
+                        }
+                        break;
+                    }
                 }
             }
         }

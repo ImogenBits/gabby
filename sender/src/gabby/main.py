@@ -5,6 +5,7 @@ from abc import abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
+from pathlib import Path
 from typing import ClassVar, Final, Literal, Self, overload
 
 
@@ -26,6 +27,9 @@ class Command:
 
     @abstractmethod
     def encode(self) -> int: ...
+
+    def encode_bytes(self) -> bytes:
+        return (0x010000 | self.encode()).to_bytes(length=3, byteorder="big")
 
 
 @dataclass
@@ -196,10 +200,10 @@ class Connection:
         data = self.sock.recv(length)
         return Packet(data_type, data)
 
-    def send(self, data: int) -> bytes:
-        self.sock.sendall(data.to_bytes(length=2, byteorder="big"))
+    def send(self, data: bytes) -> bytes:
+        self.sock.sendall(data)
         response = self.receive()
-        while response.type is not DataType.response:
+        while response.type is DataType.misc:
             self.received.append(response)
             response = self.receive()
         return response.data
@@ -242,7 +246,7 @@ class Typewriter:
     def _send(self, data: Command | Iterable[Command]) -> list[bytes]:
         if isinstance(data, Command):
             data = [data]
-        return [self._connection.send(command.encode()) for command in data]
+        return [self._connection.send(command.encode_bytes()) for command in data]
 
     def online(self) -> None:
         self._send(Control.online())
@@ -299,12 +303,7 @@ class Typewriter:
         self.move_head(horizontal - self._horizontal_position, vertical - self._vertical_position)
 
     def get_keys(self) -> int:
-        packet = None
-        while packet is None:
-            packet = self._connection.receive(blocking=True)
-            if packet.type is not DataType.keyboard:
-                packet = None
-        return int.from_bytes(packet.data, "big")
+        return int.from_bytes(self._connection.send(0x02.to_bytes()), "big")
 
 
 def main() -> None:
@@ -312,10 +311,16 @@ def main() -> None:
     print("yay")
     with tp:
         print("yay")
+        key_map: dict[str, int] = {}
         while True:
+            pressed = input("Which key is pressed? ")
+            if pressed == "exit":
+                break
             keys = tp.get_keys()
-            print(f"keys: {keys:032b}")
-
+            print(f"{pressed}: {keys:032b}")
+        formatted = "\n".join(f"{key: >6} {bits: >2} {bits:032b}" for key, bits in key_map.items())
+        print(formatted)
+        Path().joinpath("keys.txt").write_text(formatted)
 
 
 if __name__ == "__main__":
