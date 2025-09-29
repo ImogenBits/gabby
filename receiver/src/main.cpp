@@ -60,6 +60,7 @@ uint32_t scanKeys() {
         for (uint8_t pin = 0; pin < 5; pin++) {
             digitalWrite(keyboardSelect[pin], !!(keyboardWire & (1 << pin)));
         }
+        delay(2);
         data |= digitalRead(keyboardIn) << keyboardWire;
     }
     return data;

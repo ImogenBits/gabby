@@ -191,9 +191,11 @@ class Connection:
     def receive(self, *, blocking: Literal[False]) -> Packet | None: ...
 
     def receive(self, *, blocking: bool = True) -> Packet | None:
-        self.sock.setblocking(blocking)
+        self.sock.settimeout(2 if blocking else 0.0)
         try:
             received = self.sock.recv(1)[0]
+        except TimeoutError:
+            raise
         except OSError:
             return None
         data_type, length = DataType.parse(received)
@@ -303,25 +305,61 @@ class Typewriter:
         self.move_head(horizontal - self._horizontal_position, vertical - self._vertical_position)
 
     def get_keys(self) -> int:
-        return int.from_bytes(self._connection.send(0x02.to_bytes()), "big")
+        raw = int.from_bytes(self._connection.send(0x02.to_bytes()), "big")
+        return (raw)
+        # ^ 0x3F3A3B35
+        # 0xFFFBFBF5
+
+
+KEYS = [
+    *"QAYWSXEDCRFVTGBZHNUJMIK,OL.PÖ-ÜÄ+#1234567890ß´",
+    "Aut",
+    "Tab",
+    "CapsLock",
+    "LShift",
+    "T-",
+    "Center",
+    "RCircle",
+    "Space",
+    "LeftAlign",
+    "Backspace",
+    "Dec",
+    "Enter",
+    "LeftArrow",
+    "RShift",
+    "Copy",
+    "JumpRight",
+    "T+",
+    "RightAlign",
+    "Circuits",
+    "FontSize",
+    "Spacing",
+    "OnLine",
+    "LeftRightArrows",
+    "RightMargin",
+    "TopAlign",
+    "BottomAlign",
+]
 
 
 def main() -> None:
     tp = Typewriter()
-    print("yay")
-    with tp:
-        print("yay")
-        key_map: dict[str, int] = {}
-        while True:
-            pressed = input("Which key is pressed? ")
-            if pressed == "":
-                break
-            bits = tp.get_keys()
-            key_map[pressed] = bits
-            print(f"{pressed}: {bits:032b}")
-        formatted = "\n".join(f"{key: >6} {bits: >8x} {bits:032b}" for key, bits in key_map.items())
-        print(formatted)
-        Path().joinpath("keys.txt").write_text(formatted)
+    print("connected")
+    #with tp:
+    print("ready")
+    key_map: dict[str, int] = {}
+    for key in KEYS:
+        entered = input(f"Press {key}")
+        if entered:
+            break
+        bits = tp.get_keys()
+        key_map[key] = bits
+        print(f"{key}: {bits:032b}")
+    formatted = "\n".join(f"{key: >15} {bits:0>8x} {bits:032b}" for key, bits in key_map.items())
+    print(formatted)
+    path = Path().joinpath("keys.txt")
+    old = path.read_text("utf-8") + "-----\n" if path.exists() else ""
+    path.write_text(f"{old}{formatted}\n", "utf-8")
 
 
 if __name__ == "__main__":
